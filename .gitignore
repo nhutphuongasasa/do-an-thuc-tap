@@ -1,1 +1,9 @@
-*.pkl
+venv/
+.venv/
+env/
+ENV/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pkl  
