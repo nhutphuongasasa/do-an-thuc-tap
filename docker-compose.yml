@@ -1,0 +1,21 @@
+services:
+  trafficguard:
+    build: ./TrafficGuard
+    container_name: trafficguard-nids
+    restart: unless-stopped
+
+    network_mode: host
+
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
+    environment:
+      - NIDS_INTERFACE=${NIDS_INTERFACE:-}
+      - NIDS_LOG_LEVEL=${NIDS_LOG_LEVEL:-INFO}
+      - NIDS_TELEGRAM_TOKEN=${NIDS_TELEGRAM_TOKEN:-}
+      - NIDS_TELEGRAM_CHAT_ID=${NIDS_TELEGRAM_CHAT_ID:-}
+
+    volumes:
+      - ./models:/app/models:ro
+      - ./logs:/app/logs

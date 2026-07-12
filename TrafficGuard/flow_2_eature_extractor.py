@@ -4,13 +4,12 @@ import queue
 import logging
 import numpy as np
 
-from .models import FeatureVector
+from dto import FeatureVector
 
 logger = logging.getLogger("nids.features")
 
 
 def _stats(values):
-    """Tra ve (mean, std, max, min), an toan khi list rong -> tra 0.0 het."""
     if not values:
         return 0.0, 0.0, 0.0, 0.0
     arr = np.asarray(values, dtype="float64")
@@ -18,22 +17,13 @@ def _stats(values):
 
 
 def _iat(timestamps):
-    """Inter-Arrival-Time: khoang cach (giay) giua cac timestamp lien tiep."""
     if len(timestamps) < 2:
         return []
     ts = sorted(timestamps)
     return [ts[i] - ts[i - 1] for i in range(1, len(ts))]
 
-
+# tinh cac cum traffic hoat dong odn dapa vakhong don dpa thanh 2 cum active va idle  ra tong so active va tonng so idle
 def _active_idle_periods(timestamps, idle_threshold):
-    """
-    Tai tao logic Active/Idle kieu CICFlowMeter:
-    - Sap xep timestamp tang dan.
-    - Neu khoang cach giua 2 goi tin lien tiep >= idle_threshold: dong 1 "active period"
-      (tu active_start den goi truoc do), mo 1 "idle period" co do dai = khoang cach.
-    - Neu < idle_threshold: van con trong active period hien tai (flow dang "ban ron").
-    Tra ve (active_durations, idle_durations) - don vi giay.
-    """
     ts = sorted(timestamps)
     if len(ts) < 2:
         return [], []
@@ -56,13 +46,11 @@ def _active_idle_periods(timestamps, idle_threshold):
 
 
 class FeatureCalculator:
-    """Tinh 1 dict feature cho 1 flow trong 1 window - dung chung cho moi WindowFeatureExtractor."""
 
     def __init__(self, idle_threshold: float):
         self.idle_threshold = idle_threshold
 
     def compute(self, packets):
-        """packets: list[PacketEvent] cua 1 flow trong window. Tra ve dict feature hoac None."""
         if len(packets) < 2:
             return None
 
@@ -150,11 +138,6 @@ class FeatureCalculator:
 
 
 class WindowFeatureExtractor(threading.Thread):
-    """
-    1 thread rieng cho 1 kich thuoc sliding window (vd 1s, 3s, 5s).
-    Doc doc lap tu FlowBuffer (khong dung chung Queue voi cac window khac)
-    nen khong bi "dong bo cheo" hay tranh chap giua cac window.
-    """
 
     def __init__(self, flow_buffer, out_queue: "queue.Queue", window_seconds: int,
                  extract_interval: float, idle_threshold: float, flow_timeout: float):

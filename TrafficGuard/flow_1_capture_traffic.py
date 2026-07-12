@@ -6,10 +6,9 @@ from typing import Optional
 
 from scapy.all import sniff, IP, TCP, UDP
 
-from .models import PacketEvent
+from dto import PacketEvent
 
 logger = logging.getLogger("nids.capture")
-
 
 class PacketCaptureEngine:
     def __init__(self, out_queue: "queue.Queue[PacketEvent]",
@@ -18,26 +17,25 @@ class PacketCaptureEngine:
         self.interface = interface
         self.bpf_filter = bpf_filter
 
+        #dieu khien start/stop cua thread trong python
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
 
-        # Luu chieu "forward" (ai la nguoi khoi tao) cho tung flow, de goi tra loi
-        # duoc gan dung nhan "bwd".
+        #bo nho xac dinh chieu goi tin
         self._flow_origin = {}
         self._flow_origin_lock = threading.Lock()
 
-        # So lieu thong ke de in ra man hinh dinh ky
         self.packet_count = 0
         self.dropped_count = 0
 
-    # ---------------- helpers ----------------
+    #chuyen cac goi tin trong cung 1 traffic flow tro thanh 1 thu tu nhat dinh
     @staticmethod
     def _make_flow_key(src_ip, dst_ip, sport, dport, proto):
-        """5-tuple flow key khong phan biet chieu: (A,portA) <-> (B,portB) luon ra 1 key."""
         if (src_ip, sport) <= (dst_ip, dport):
             return (src_ip, sport, dst_ip, dport, proto)
         return (dst_ip, dport, src_ip, sport, proto)
 
+    #xac dinh goi tin di hay ve 
     def _direction(self, flow_key, src_ip, sport):
         with self._flow_origin_lock:
             origin = self._flow_origin.get(flow_key)
@@ -46,6 +44,7 @@ class PacketCaptureEngine:
                 return "fwd"
             return "fwd" if origin == (src_ip, sport) else "bwd"
 
+    #xac dinh flag cua goi tin 
     @staticmethod
     def _extract_flags(tcp_layer):
         if tcp_layer is None:
@@ -60,7 +59,6 @@ class PacketCaptureEngine:
             "URG": int(bool(flags & 0x20)),
         }
 
-    # ---------------- scapy callback ----------------
     def _on_packet(self, pkt):
         try:
             if IP not in pkt:

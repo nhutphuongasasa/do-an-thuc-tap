@@ -5,26 +5,25 @@ import signal
 import logging
 import sys
 
-from nids import config
-from nids.capture import PacketCaptureEngine
-from nids.flow_buffer import FlowBuffer
-from nids.feature_extractor import WindowFeatureExtractor
-from nids.inference_engine import InferenceEngine
-from nids.alerting import AlertManager
-
+import config
+from flow_1_capture_traffic import PacketCaptureEngine
+from buffer import FlowBuffer
+from flow_2_eature_extractor import WindowFeatureExtractor
+from flow_3_model_decision import InferenceEngine
+from alert import AlertManager
 
 def setup_logging():
     import os
     os.makedirs(config.LOG_DIR, exist_ok=True)
+    log_level = getattr(logging, config.LOG_LEVEL, logging.INFO)
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         handlers=[
             logging.FileHandler(config.SYSTEM_LOG_FILE, encoding="utf-8"),
             logging.StreamHandler(sys.stdout),
         ],
     )
-
 
 def main():
     setup_logging()
@@ -34,21 +33,18 @@ def main():
     logger.info("Windows thoi gian: %s | Model dir: %s", config.WINDOW_SIZES, config.MODEL_DIR)
     logger.info("=" * 70)
 
-    # ---- Queue giua cac Flow ----
     queue1 = queue.Queue(maxsize=config.QUEUE1_MAXSIZE)          # raw packet (Flow1 -> Aggregator)
     queue2 = queue.Queue(maxsize=config.QUEUE2_MAXSIZE)          # feature vector (Flow2 -> Flow3)
     alert_queue = queue.Queue(maxsize=config.ALERT_QUEUE_MAXSIZE)  # prediction (Flow3 -> Flow4)
 
     flow_buffer = FlowBuffer(max_age_seconds=config.MAX_BUFFER_SECONDS)
 
-    # ---- FLOW 1: Packet Capture ----
     capture = PacketCaptureEngine(
         out_queue=queue1,
         interface=config.INTERFACE,
         bpf_filter=config.BPF_FILTER,
     )
 
-    # ---- Aggregator: chuyen tu Queue1 vao FlowBuffer (dung chung cho moi Flow2 worker) ----
     stop_flag = threading.Event()
 
     def aggregator_loop():
@@ -61,7 +57,6 @@ def main():
 
     aggregator_thread = threading.Thread(target=aggregator_loop, name="Aggregator", daemon=True)
 
-    # ---- FLOW 2: 1 thread rieng cho moi window (1s, 3s, 5s...) ----
     window_workers = [
         WindowFeatureExtractor(
             flow_buffer=flow_buffer,
@@ -74,7 +69,6 @@ def main():
         for w in config.WINDOW_SIZES
     ]
 
-    # ---- FLOW 3: Inference Engine ----
     inference = InferenceEngine(
         in_queue=queue2,
         alert_queue=alert_queue,
@@ -86,9 +80,11 @@ def main():
         vote_mode=config.VOTE_MODE,
         window_weights=config.WINDOW_WEIGHTS,
         min_confidence=config.ALERT_MIN_CONFIDENCE,
+        required_window_sizes=set(config.WINDOW_SIZES),
+        confirm_streak=config.CONFIRM_STREAK,
+        stale_window_seconds=config.STALE_WINDOW_SECONDS,
     )
 
-    # ---- FLOW 4: Alert Manager ----
     alert_manager = AlertManager(
         in_queue=alert_queue,
         log_dir=config.LOG_DIR,
@@ -99,7 +95,6 @@ def main():
         telegram_chat_id=config.TELEGRAM_CHAT_ID,
     )
 
-    # ---- Khoi dong theo dung thu tu: consumer truoc, producer (capture) sau cung ----
     aggregator_thread.start()
     for w in window_workers:
         w.start()
@@ -124,7 +119,6 @@ def main():
     signal.signal(signal.SIGINT, shutdown)
     signal.signal(signal.SIGTERM, shutdown)
 
-    # ---- Vong lap chinh: in thong ke dinh ky de theo doi suc khoe pipeline ----
     try:
         while True:
             time.sleep(10)

@@ -46,23 +46,6 @@ class AlertManager(threading.Thread):
             ])
             self._csv_file.flush()
 
-    def _send_telegram(self, message: str):
-        if not (self.telegram_token and self.telegram_chat_id and requests):
-            return
-        try:
-            url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
-            requests.post(url, data={"chat_id": self.telegram_chat_id, "text": message}, timeout=5)
-        except Exception:
-            logger.exception("Gui Telegram alert that bai")
-
-    def _should_send_telegram(self, flow_key):
-        now = time.time()
-        last = self._last_alert_ts.get(flow_key, 0)
-        if now - last >= self.cooldown_seconds:
-            self._last_alert_ts[flow_key] = now
-            return True
-        return False
-
     def run(self):
         logger.info("Flow4 (Alert Manager) bat dau.")
         while not self._stop_event.is_set():

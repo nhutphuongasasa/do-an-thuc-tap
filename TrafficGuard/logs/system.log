@@ -1,0 +1,287 @@
+2026-07-12 14:54:39,459 [INFO] nids.main: ======================================================================
+2026-07-12 14:54:39,459 [INFO] nids.main: KHOI DONG NIDS REALTIME PIPELINE (4 FLOW)
+2026-07-12 14:54:39,459 [INFO] nids.main: Windows thoi gian: [1, 3, 5] | Model dir: /home/phuong/Documents/do an thuc tpa tot nghiep/TrafficGuard/../models
+2026-07-12 14:54:39,459 [INFO] nids.main: ======================================================================
+2026-07-12 14:54:39,460 [INFO] nids.inference: Dang load model/scaler/label_encoder/feature_list tu disk...
+2026-07-12 14:54:40,493 [INFO] nids.inference: Da load xong model. So feature=42 | So class=13 | Classes=['BENIGN', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator', 'Heartbleed', 'Infiltration', 'PortScan', 'SSH-Patator', 'Web Attack']
+2026-07-12 14:54:40,494 [INFO] nids.features: Flow2 worker (window=1s) bat dau.
+2026-07-12 14:54:40,495 [INFO] nids.features: Flow2 worker (window=3s) bat dau.
+2026-07-12 14:54:40,495 [INFO] nids.features: Flow2 worker (window=5s) bat dau.
+2026-07-12 14:54:40,495 [INFO] nids.inference: Flow3 (Inference Engine) bat dau. required_windows={1, 3, 5} | min_windows=2 | confirm_streak=2
+2026-07-12 14:54:40,495 [INFO] nids.alert: Flow4 (Alert Manager) bat dau.
+2026-07-12 14:54:40,496 [INFO] nids.capture: Flow1 (Packet Capture) bat dau. interface=<default> filter='ip'
+2026-07-12 14:54:40,496 [INFO] nids.main: Pipeline da chay xong. Nhan Ctrl+C de dung an toan.
+2026-07-12 14:54:41,537 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=1s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:41,558 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=1s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,575 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=1s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,592 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=1s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,608 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=1s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,625 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:41,642 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,658 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,675 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,692 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,709 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:41,709 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:41,727 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,727 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:41,744 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,744 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:41,762 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,762 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:41,779 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:41,779 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,528 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:42,529 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:42,555 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,556 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,574 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,574 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,592 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,592 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,609 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,609 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,627 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:42,627 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:42,644 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,645 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,662 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,662 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,679 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,679 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:42,697 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:42,697 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,526 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:43,527 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:43,552 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,552 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,570 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,571 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,588 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,588 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,606 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,606 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,623 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:43,623 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:43,640 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,641 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,657 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,658 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,674 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,675 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:43,692 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:43,692 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:44,527 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=1s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,550 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=1s | predict=BENIGN (conf=0.82)
+2026-07-12 14:54:44,567 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,585 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=3s | predict=BENIGN (conf=0.82)
+2026-07-12 14:54:44,610 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:44,610 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:44,629 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,629 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:44,647 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,647 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:44,665 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,665 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:44,682 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,682 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:44,700 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:44,700 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:44,719 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=5s | predict=BENIGN (conf=0.82)
+2026-07-12 14:54:44,719 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.82)
+2026-07-12 14:54:45,526 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=1s | predict=BENIGN (conf=0.88)
+2026-07-12 14:54:45,526 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.83)
+2026-07-12 14:54:45,552 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=1s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:45,574 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:45,574 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,591 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=3s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:45,591 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:45,608 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:45,625 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:45,625 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:45,643 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:45,643 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 57856, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,661 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:45,661 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54236, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,678 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:45,679 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 54208, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,696 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:45,696 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 56760, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,713 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:45,713 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,731 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=5s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:45,731 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:45,748 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:45,748 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:46,528 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=1s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:46,528 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:46,556 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:46,557 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:46,576 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:46,576 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:46,594 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=3s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:46,594 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:46,612 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:46,612 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:46,630 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:46,630 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.86)
+2026-07-12 14:54:46,647 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:46,648 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:46,665 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=5s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:46,665 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:46,682 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:46,682 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:47,536 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.85)
+2026-07-12 14:54:47,536 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:47,563 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=3s | predict=BENIGN (conf=0.88)
+2026-07-12 14:54:47,563 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:47,582 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:47,582 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:47,599 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.85)
+2026-07-12 14:54:47,600 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:47,617 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:47,617 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:47,634 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=5s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:47,635 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:47,652 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:47,652 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:48,529 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.85)
+2026-07-12 14:54:48,529 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:48,551 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.85)
+2026-07-12 14:54:48,551 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:48,571 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 14:54:48,571 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 55694, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:48,589 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=5s | predict=BENIGN (conf=0.86)
+2026-07-12 14:54:48,589 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 14:54:48,606 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:48,607 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:49,538 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.85)
+2026-07-12 14:54:49,538 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:49,561 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 14:54:49,561 [DEBUG] nids.inference: Flow ('140.82.112.21', 443, '192.168.1.24', 51832, 'TCP') | VOTE ket qua: BENIGN (conf=0.88)
+2026-07-12 14:54:49,586 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.84)
+2026-07-12 14:54:49,586 [DEBUG] nids.inference: Flow ('192.168.1.24', 38350, '52.175.140.176', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 14:54:50,497 [INFO] nids.main: STAT | packet=66 | dropped=0 | Q1=0 | Q2=0 | alertQ=0 | active_flows=13 | flows_cleaned=0
+2026-07-12 14:54:50,534 [DEBUG] nids.inference: Flow ('192.168.1.27', 5353, '224.0.0.251', 5353, 'UDP') | window=3s | predict=BENIGN (conf=0.90)
+2026-07-12 14:54:50,560 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.85)
+2026-07-12 14:54:50,560 [DEBUG] nids.inference: Flow ('192.168.1.24', 54712, '20.42.65.94', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 14:54:50,579 [DEBUG] nids.inference: Flow ('192.168.1.27', 5353, '224.0.0.251', 5353, 'UDP') | window=5s | predict=BENIGN (conf=0.90)
+2026-07-12 14:54:51,530 [DEBUG] nids.inference: Flow ('192.168.1.27', 5353, '224.0.0.251', 5353, 'UDP') | window=3s | predict=BENIGN (conf=0.90)
+2026-07-12 14:54:51,552 [DEBUG] nids.inference: Flow ('192.168.1.27', 5353, '224.0.0.251', 5353, 'UDP') | window=5s | predict=BENIGN (conf=0.90)
+2026-07-12 14:54:52,379 [INFO] nids.main: Nhan tin hieu dung, dang shutdown toan bo pipeline...
+2026-07-12 14:54:52,542 [DEBUG] nids.inference: Flow ('192.168.1.27', 5353, '224.0.0.251', 5353, 'UDP') | window=5s | predict=BENIGN (conf=0.90)
+2026-07-12 14:54:53,134 [INFO] nids.capture: Flow1 (Packet Capture) da dung.
+2026-07-12 14:54:53,135 [INFO] nids.features: Flow2 worker (window=5s) da dung.
+2026-07-12 14:54:53,135 [INFO] nids.features: Flow2 worker (window=3s) da dung.
+2026-07-12 14:54:53,136 [INFO] nids.features: Flow2 worker (window=1s) da dung.
+2026-07-12 14:54:53,542 [INFO] nids.inference: Flow3 (Inference Engine) da dung.
+2026-07-12 14:54:53,565 [INFO] nids.alert: Flow4 (Alert Manager) da dung.
+2026-07-12 14:54:54,135 [INFO] nids.main: Da dung toan bo pipeline. Tam biet!
+2026-07-12 15:03:16,864 [INFO] nids.main: ======================================================================
+2026-07-12 15:03:16,864 [INFO] nids.main: KHOI DONG NIDS REALTIME PIPELINE (4 FLOW)
+2026-07-12 15:03:16,864 [INFO] nids.main: Windows thoi gian: [1, 3, 5] | Model dir: /home/phuong/Documents/do an thuc tpa tot nghiep/TrafficGuard/../models
+2026-07-12 15:03:16,864 [INFO] nids.main: ======================================================================
+2026-07-12 15:03:16,865 [INFO] nids.inference: Dang load model/scaler/label_encoder/feature_list tu disk...
+2026-07-12 15:03:17,913 [INFO] nids.inference: Da load xong model. So feature=42 | So class=13 | Classes=['BENIGN', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator', 'Heartbleed', 'Infiltration', 'PortScan', 'SSH-Patator', 'Web Attack']
+2026-07-12 15:03:17,914 [INFO] nids.features: Flow2 worker (window=1s) bat dau.
+2026-07-12 15:03:17,914 [INFO] nids.features: Flow2 worker (window=3s) bat dau.
+2026-07-12 15:03:17,914 [INFO] nids.features: Flow2 worker (window=5s) bat dau.
+2026-07-12 15:03:17,915 [INFO] nids.inference: Flow3 (Inference Engine) bat dau. required_windows={1, 3, 5} | min_windows=2 | confirm_streak=2
+2026-07-12 15:03:17,915 [INFO] nids.alert: Flow4 (Alert Manager) bat dau.
+2026-07-12 15:03:17,915 [INFO] nids.capture: Flow1 (Packet Capture) bat dau. interface=<default> filter='ip'
+2026-07-12 15:03:17,915 [INFO] nids.main: Pipeline da chay xong. Nhan Ctrl+C de dung an toan.
+2026-07-12 15:03:18,955 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=1s | predict=BENIGN (conf=0.83)
+2026-07-12 15:03:18,974 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=5s | predict=BENIGN (conf=0.83)
+2026-07-12 15:03:18,997 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=3s | predict=BENIGN (conf=0.83)
+2026-07-12 15:03:18,998 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.83)
+2026-07-12 15:03:19,943 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=1s | predict=BENIGN (conf=0.85)
+2026-07-12 15:03:19,944 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 15:03:19,967 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:19,967 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 15:03:19,992 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=3s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:19,992 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:20,943 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=1s | predict=BENIGN (conf=0.86)
+2026-07-12 15:03:20,968 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=1s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:20,989 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=1s | predict=BENIGN (conf=0.82)
+2026-07-12 15:03:21,018 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:21,018 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:21,038 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.86)
+2026-07-12 15:03:21,055 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:21,072 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=5s | predict=BENIGN (conf=0.82)
+2026-07-12 15:03:21,089 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=3s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:21,090 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:21,107 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.86)
+2026-07-12 15:03:21,107 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.86)
+2026-07-12 15:03:21,125 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:21,125 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:21,149 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=3s | predict=BENIGN (conf=0.82)
+2026-07-12 15:03:21,150 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.82)
+2026-07-12 15:03:21,943 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=1s | predict=BENIGN (conf=0.79)
+2026-07-12 15:03:21,943 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.84)
+2026-07-12 15:03:21,965 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=1s | predict=BENIGN (conf=0.93)
+2026-07-12 15:03:21,965 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 15:03:21,987 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:21,987 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:22,008 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:22,011 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 15:03:22,043 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:22,043 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:22,062 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=5s | predict=BENIGN (conf=0.91)
+2026-07-12 15:03:22,062 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.88)
+2026-07-12 15:03:22,080 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=3s | predict=BENIGN (conf=0.85)
+2026-07-12 15:03:22,080 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.86)
+2026-07-12 15:03:22,097 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:22,097 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 15:03:22,114 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:22,114 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:22,131 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=3s | predict=BENIGN (conf=0.91)
+2026-07-12 15:03:22,132 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.91)
+2026-07-12 15:03:22,944 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=1s | predict=BENIGN (conf=0.90)
+2026-07-12 15:03:22,944 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.91)
+2026-07-12 15:03:22,967 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:22,967 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50074, 'TCP') | VOTE ket qua: BENIGN (conf=0.86)
+2026-07-12 15:03:22,990 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=5s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:22,991 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 15:03:23,008 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=5s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:23,008 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:23,031 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=5s | predict=BENIGN (conf=0.91)
+2026-07-12 15:03:23,031 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.91)
+2026-07-12 15:03:23,049 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | window=3s | predict=BENIGN (conf=0.88)
+2026-07-12 15:03:23,049 [DEBUG] nids.inference: Flow ('192.168.1.24', 44248, '20.184.175.5', 443, 'TCP') | VOTE ket qua: BENIGN (conf=0.85)
+2026-07-12 15:03:23,066 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | window=3s | predict=BENIGN (conf=0.87)
+2026-07-12 15:03:23,066 [DEBUG] nids.inference: Flow ('123.23.23.23', 53, '192.168.1.24', 52112, 'UDP') | VOTE ket qua: BENIGN (conf=0.87)
+2026-07-12 15:03:23,084 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | window=3s | predict=BENIGN (conf=0.91)
+2026-07-12 15:03:23,084 [DEBUG] nids.inference: Flow ('140.82.113.22', 443, '192.168.1.24', 50076, 'TCP') | VOTE ket qua: BENIGN (conf=0.91)
+2026-07-12 15:03:23,582 [INFO] nids.main: Nhan tin hieu dung, dang shutdown toan bo pipeline...
+2026-07-12 15:03:23,745 [INFO] nids.capture: Flow1 (Packet Capture) da dung.
+2026-07-12 15:03:23,746 [INFO] nids.features: Flow2 worker (window=1s) da dung.
+2026-07-12 15:03:23,747 [INFO] nids.features: Flow2 worker (window=5s) da dung.
+2026-07-12 15:03:23,747 [INFO] nids.features: Flow2 worker (window=3s) da dung.
+2026-07-12 15:03:24,085 [INFO] nids.inference: Flow3 (Inference Engine) da dung.
+2026-07-12 15:03:24,085 [INFO] nids.alert: Flow4 (Alert Manager) da dung.
+2026-07-12 15:03:24,746 [INFO] nids.main: Da dung toan bo pipeline. Tam biet!
+2026-07-12 15:04:39,233 [INFO] nids.main: ======================================================================
+2026-07-12 15:04:39,233 [INFO] nids.main: KHOI DONG NIDS REALTIME PIPELINE (4 FLOW)
+2026-07-12 15:04:39,233 [INFO] nids.main: Windows thoi gian: [1, 3, 5] | Model dir: /home/phuong/Documents/do an thuc tpa tot nghiep/TrafficGuard/../models
+2026-07-12 15:04:39,233 [INFO] nids.main: ======================================================================
+2026-07-12 15:04:39,234 [INFO] nids.inference: Dang load model/scaler/label_encoder/feature_list tu disk...
+2026-07-12 15:04:40,269 [INFO] nids.inference: Da load xong model. So feature=42 | So class=13 | Classes=['BENIGN', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator', 'Heartbleed', 'Infiltration', 'PortScan', 'SSH-Patator', 'Web Attack']
+2026-07-12 15:04:40,270 [INFO] nids.features: Flow2 worker (window=1s) bat dau.
+2026-07-12 15:04:40,271 [INFO] nids.features: Flow2 worker (window=3s) bat dau.
+2026-07-12 15:04:40,271 [INFO] nids.features: Flow2 worker (window=5s) bat dau.
+2026-07-12 15:04:40,271 [INFO] nids.inference: Flow3 (Inference Engine) bat dau. required_windows={1, 3, 5} | min_windows=2 | confirm_streak=2
+2026-07-12 15:04:40,272 [INFO] nids.alert: Flow4 (Alert Manager) bat dau.
+2026-07-12 15:04:40,272 [INFO] nids.capture: Flow1 (Packet Capture) bat dau. interface=<default> filter='ip'
+2026-07-12 15:04:40,272 [INFO] nids.main: Pipeline da chay xong. Nhan Ctrl+C de dung an toan.
+2026-07-12 15:04:50,273 [INFO] nids.main: STAT | packet=58 | dropped=0 | Q1=0 | Q2=0 | alertQ=0 | active_flows=14 | flows_cleaned=0
+2026-07-12 15:05:00,274 [INFO] nids.main: STAT | packet=502 | dropped=0 | Q1=0 | Q2=0 | alertQ=0 | active_flows=18 | flows_cleaned=0
+2026-07-12 15:05:10,275 [INFO] nids.main: STAT | packet=577 | dropped=0 | Q1=0 | Q2=0 | alertQ=0 | active_flows=19 | flows_cleaned=0
+2026-07-12 15:05:20,275 [INFO] nids.main: STAT | packet=718 | dropped=0 | Q1=0 | Q2=0 | alertQ=0 | active_flows=29 | flows_cleaned=0
+2026-07-12 15:05:23,362 [INFO] nids.main: Nhan tin hieu dung, dang shutdown toan bo pipeline...
+2026-07-12 15:05:24,050 [INFO] nids.capture: Flow1 (Packet Capture) da dung.
+2026-07-12 15:05:24,051 [INFO] nids.features: Flow2 worker (window=1s) da dung.
+2026-07-12 15:05:24,051 [INFO] nids.features: Flow2 worker (window=3s) da dung.
+2026-07-12 15:05:24,051 [INFO] nids.features: Flow2 worker (window=5s) da dung.
+2026-07-12 15:05:24,474 [INFO] nids.inference: Flow3 (Inference Engine) da dung.
+2026-07-12 15:05:24,474 [INFO] nids.alert: Flow4 (Alert Manager) da dung.
+2026-07-12 15:05:25,051 [INFO] nids.main: Da dung toan bo pipeline. Tam biet!
