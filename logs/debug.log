@@ -820,3 +820,44 @@
 {"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "[MODEL] MLWorker ready", "worker_id": 0, "model": "RandomForest"}
 {"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "Loaded encoder from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/encoder.pkl"}
 {"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "[MODEL] MLWorker ready", "worker_id": 1, "model": "RandomForest"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:40:50.900Z", "level": "INFO", "component": "METRICS", "pid": 113276, "message": "[TRAFFIC STATISTICS]", "packets_received": 0, "packets_dropped": 0, "flows_active": 0, "flows_completed": 0, "features_processed": 0, "ml_predictions": 0, "alerts_fired": 0, "cpu_pct": 0.0, "mem_mb": 127.4}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:40:55.942Z", "level": "DEBUG", "component": "ML", "pid": 113327, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7491, "latency_ms": 53.58}
+{"time": "2026-07-14T11:40:55.943Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.75 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:40:56.129Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.5945, "latency_ms": 46.39}
+{"time": "2026-07-14T11:40:56.130Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only: confidence 0.59 below floor 0.60 — skipped"}
+{"time": "2026-07-14T11:41:00.936Z", "level": "DEBUG", "component": "ML", "pid": 113327, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7543, "latency_ms": 29.56}
+{"time": "2026-07-14T11:41:00.937Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.75 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:00.936Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7203, "latency_ms": 29.24}
+{"time": "2026-07-14T11:41:00.941Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.72 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:00.966Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7543, "latency_ms": 29.28}
+{"time": "2026-07-14T11:41:00.967Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.75 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:01.139Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.6939, "latency_ms": 28.25}
+{"time": "2026-07-14T11:41:01.144Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.75 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:01.146Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.69 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:01.143Z", "level": "DEBUG", "component": "ML", "pid": 113327, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7543, "latency_ms": 32.52}
+{"time": "2026-07-14T11:41:01.169Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7543, "latency_ms": 29.43}
+{"time": "2026-07-14T11:41:01.170Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.75 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:01.173Z", "level": "DEBUG", "component": "ML", "pid": 113327, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7914, "latency_ms": 29.9}
+{"time": "2026-07-14T11:41:01.174Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.79 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:41:05.940Z", "level": "DEBUG", "component": "ML", "pid": 113327, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7966, "latency_ms": 27.97}
+{"time": "2026-07-14T11:41:05.941Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.80 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:05.941Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.80 raw=0.0 scaled=0.0"}
+{"time": "2026-07-14T11:41:05.940Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7982, "latency_ms": 27.73}
+{"time": "2026-07-14T11:41:05.969Z", "level": "DEBUG", "component": "ML", "pid": 113326, "message": "[ML] prediction completed", "label": "Benign", "confidence": 0.7982, "latency_ms": 28.24}
+{"time": "2026-07-14T11:41:05.970Z", "level": "DEBUG", "component": "CORRELATION.SCORER", "pid": 113276, "message": "[SCORER] ML-only mode | label=Benign conf=0.80 raw=0.0 scaled=0.0"}

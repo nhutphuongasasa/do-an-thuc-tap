@@ -68,3 +68,20 @@
 {"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "[MODEL] MLWorker ready", "worker_id": 0, "model": "RandomForest"}
 {"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "Loaded encoder from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/encoder.pkl"}
 {"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "[MODEL] MLWorker ready", "worker_id": 1, "model": "RandomForest"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:40:34.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:40:44.586Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:40:50.900Z", "level": "INFO", "component": "METRICS", "pid": 113276, "message": "[TRAFFIC STATISTICS]", "packets_received": 0, "packets_dropped": 0, "flows_active": 0, "flows_completed": 0, "features_processed": 0, "ml_predictions": 0, "alerts_fired": 0, "cpu_pct": 0.0, "mem_mb": 127.4}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:40:54.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:41:04.588Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
