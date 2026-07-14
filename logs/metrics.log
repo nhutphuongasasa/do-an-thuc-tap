@@ -1,0 +1,70 @@
+{"time": "2026-07-14T11:21:24.570Z", "level": "INFO", "component": "METRICS", "pid": 112385, "message": "[STATS COLLECTOR] started", "interval_s": 30.0}
+{"time": "2026-07-14T11:21:25.425Z", "level": "INFO", "component": "MAIN", "pid": 112385, "message": "[NIDS START]", "version": "1.0.0", "interface": "auto", "log_level": "DEBUG", "debug": true}
+{"time": "2026-07-14T11:21:25.425Z", "level": "INFO", "component": "MAIN", "pid": 112385, "message": "[WORKER CONFIG]", "flow_workers": 2, "feature_workers": 2, "ml_workers": 2}
+{"time": "2026-07-14T11:21:25.426Z", "level": "INFO", "component": "CAPTURE", "pid": 112385, "message": "[CAPTURE] Auto-detected interface", "interface": "wlp61s0", "ip": "192.168.1.24", "method": "default-route"}
+{"time": "2026-07-14T11:21:27.089Z", "level": "INFO", "component": "DB", "pid": 112385, "message": "Connected to PostgreSQL database successfully."}
+{"time": "2026-07-14T11:21:27.089Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[DATABASE]", "status": "connected"}
+{"time": "2026-07-14T11:21:27.089Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "Starting all NIDS components"}
+{"time": "2026-07-14T11:21:27.094Z", "level": "INFO", "component": "ML", "pid": 112436, "message": "[WORKER] MLWorker started", "worker_id": 0}
+{"time": "2026-07-14T11:21:27.098Z", "level": "INFO", "component": "ML", "pid": 112437, "message": "[WORKER] MLWorker started", "worker_id": 1}
+{"time": "2026-07-14T11:21:27.099Z", "level": "INFO", "component": "FEATURES", "pid": 112385, "message": "FeatureWorker-0 started"}
+{"time": "2026-07-14T11:21:27.100Z", "level": "INFO", "component": "FEATURES", "pid": 112385, "message": "FeatureWorker-1 started"}
+{"time": "2026-07-14T11:21:27.100Z", "level": "INFO", "component": "FLOW", "pid": 112385, "message": "FlowWorker-0 started"}
+{"time": "2026-07-14T11:21:27.100Z", "level": "INFO", "component": "FLOW", "pid": 112385, "message": "FlowWorker-1 started"}
+{"time": "2026-07-14T11:21:27.102Z", "level": "INFO", "component": "CAPTURE", "pid": 112385, "message": "Starting PacketCapture  interface=wlp61s0  filter='ip'"}
+{"time": "2026-07-14T11:21:27.103Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "All workers running and awaiting traffic"}
+{"time": "2026-07-14T11:21:28.365Z", "level": "INFO", "component": "ML", "pid": 112437, "message": "Loaded model from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/model.pkl"}
+{"time": "2026-07-14T11:21:28.367Z", "level": "INFO", "component": "ML", "pid": 112437, "message": "Loaded scaler from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/scaler.pkl"}
+{"time": "2026-07-14T11:21:28.367Z", "level": "INFO", "component": "ML", "pid": 112437, "message": "Loaded encoder from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/encoder.pkl"}
+{"time": "2026-07-14T11:21:28.367Z", "level": "INFO", "component": "ML", "pid": 112437, "message": "[MODEL] MLWorker ready", "worker_id": 1, "model": "RandomForest"}
+{"time": "2026-07-14T11:21:28.372Z", "level": "INFO", "component": "ML", "pid": 112436, "message": "Loaded model from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/model.pkl"}
+{"time": "2026-07-14T11:21:28.373Z", "level": "INFO", "component": "ML", "pid": 112436, "message": "Loaded scaler from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/scaler.pkl"}
+{"time": "2026-07-14T11:21:28.374Z", "level": "INFO", "component": "ML", "pid": 112436, "message": "Loaded encoder from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/encoder.pkl"}
+{"time": "2026-07-14T11:21:28.374Z", "level": "INFO", "component": "ML", "pid": 112436, "message": "[MODEL] MLWorker ready", "worker_id": 0, "model": "RandomForest"}
+{"time": "2026-07-14T11:21:37.102Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "packet_queue": "1/5000"}
+{"time": "2026-07-14T11:21:37.102Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:21:37.102Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:21:37.102Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:21:47.103Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:21:47.104Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:21:47.104Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:21:47.104Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:21:54.581Z", "level": "INFO", "component": "METRICS", "pid": 112385, "message": "[TRAFFIC STATISTICS]", "packets_received": 0, "packets_dropped": 0, "flows_active": 0, "flows_completed": 0, "features_processed": 0, "ml_predictions": 0, "alerts_fired": 0, "cpu_pct": 33.3, "mem_mb": 214.1}
+{"time": "2026-07-14T11:21:57.109Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "packet_queue": "0/5000"}
+{"time": "2026-07-14T11:21:57.109Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:21:57.109Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "feature_queue": "0/5000"}
+{"time": "2026-07-14T11:21:57.109Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "ml_result_queue": "0/5000"}
+{"time": "2026-07-14T11:22:07.111Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "packet_queue": "5/5000"}
+{"time": "2026-07-14T11:22:07.111Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "flow_queue": "0/5000"}
+{"time": "2026-07-14T11:22:07.111Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "feature_queue": "2056/5000"}
+{"time": "2026-07-14T11:22:07.111Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "[QUEUE]", "ml_result_queue": "2/5000"}
+{"time": "2026-07-14T11:22:07.603Z", "level": "INFO", "component": "MAIN", "pid": 112437, "message": "Graceful shutdown initiated", "signal": 2}
+{"time": "2026-07-14T11:22:07.604Z", "level": "INFO", "component": "MAIN", "pid": 112385, "message": "Graceful shutdown initiated", "signal": 2}
+{"time": "2026-07-14T11:22:07.603Z", "level": "INFO", "component": "MAIN", "pid": 112436, "message": "Graceful shutdown initiated", "signal": 2}
+{"time": "2026-07-14T11:22:08.176Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 112385, "message": "Initiating graceful shutdown"}
+{"time": "2026-07-14T11:22:08.176Z", "level": "INFO", "component": "CAPTURE", "pid": 112385, "message": "Stopping PacketCapture..."}
+{"time": "2026-07-14T11:22:08.182Z", "level": "INFO", "component": "CAPTURE", "pid": 112385, "message": "PacketCapture stopped."}
+{"time": "2026-07-14T11:40:20.899Z", "level": "INFO", "component": "METRICS", "pid": 113276, "message": "[STATS COLLECTOR] started", "interval_s": 30.0}
+{"time": "2026-07-14T11:40:22.023Z", "level": "INFO", "component": "MAIN", "pid": 113276, "message": "[NIDS START]", "version": "1.0.0", "interface": "auto", "log_level": "DEBUG", "debug": true}
+{"time": "2026-07-14T11:40:22.023Z", "level": "INFO", "component": "MAIN", "pid": 113276, "message": "[WORKER CONFIG]", "flow_workers": 2, "feature_workers": 2, "ml_workers": 2}
+{"time": "2026-07-14T11:40:22.025Z", "level": "INFO", "component": "CAPTURE", "pid": 113276, "message": "[CAPTURE] Auto-detected interface", "interface": "wlp61s0", "ip": "192.168.1.24", "method": "default-route"}
+{"time": "2026-07-14T11:40:24.563Z", "level": "INFO", "component": "DB", "pid": 113276, "message": "Connected to PostgreSQL database successfully."}
+{"time": "2026-07-14T11:40:24.563Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "[DATABASE]", "status": "connected"}
+{"time": "2026-07-14T11:40:24.563Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "Starting all NIDS components"}
+{"time": "2026-07-14T11:40:24.570Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "[WORKER] MLWorker started", "worker_id": 0}
+{"time": "2026-07-14T11:40:24.576Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "[WORKER] MLWorker started", "worker_id": 1}
+{"time": "2026-07-14T11:40:24.578Z", "level": "INFO", "component": "FEATURES", "pid": 113276, "message": "FeatureWorker-0 started"}
+{"time": "2026-07-14T11:40:24.579Z", "level": "INFO", "component": "FEATURES", "pid": 113276, "message": "FeatureWorker-1 started"}
+{"time": "2026-07-14T11:40:24.580Z", "level": "INFO", "component": "FLOW", "pid": 113276, "message": "FlowWorker-0 started"}
+{"time": "2026-07-14T11:40:24.581Z", "level": "INFO", "component": "FLOW", "pid": 113276, "message": "FlowWorker-1 started"}
+{"time": "2026-07-14T11:40:24.582Z", "level": "INFO", "component": "CORRELATION", "pid": 113276, "message": "[CORRELATION ENGINE] started"}
+{"time": "2026-07-14T11:40:24.585Z", "level": "INFO", "component": "CAPTURE", "pid": 113276, "message": "Starting PacketCapture  interface=wlp61s0  filter='ip'"}
+{"time": "2026-07-14T11:40:24.587Z", "level": "INFO", "component": "WORKER_MANAGER", "pid": 113276, "message": "All workers running and awaiting traffic"}
+{"time": "2026-07-14T11:40:26.641Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "Loaded model from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/model.pkl"}
+{"time": "2026-07-14T11:40:26.640Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "Loaded model from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/model.pkl"}
+{"time": "2026-07-14T11:40:26.642Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "Loaded scaler from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/scaler.pkl"}
+{"time": "2026-07-14T11:40:26.642Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "Loaded scaler from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/scaler.pkl"}
+{"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "Loaded encoder from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/encoder.pkl"}
+{"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113326, "message": "[MODEL] MLWorker ready", "worker_id": 0, "model": "RandomForest"}
+{"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "Loaded encoder from /home/phuong/Documents/do an thuc tpa tot nghiep/darktrace-nids/ml/models/encoder.pkl"}
+{"time": "2026-07-14T11:40:26.643Z", "level": "INFO", "component": "ML", "pid": 113327, "message": "[MODEL] MLWorker ready", "worker_id": 1, "model": "RandomForest"}

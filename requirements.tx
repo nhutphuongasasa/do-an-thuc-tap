@@ -1,6 +1,0 @@
-scapy>=2.5.0
-numpy
-pandas
-scikit-learn
-joblib
-requests
