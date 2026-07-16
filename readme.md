@@ -1,401 +1,228 @@
-# Modular Network Intrusion Detection System (NIDS/NDR)
+# Edge AI Phát Hiện Bất Thường Lưu Lượng Mạng Mã Hóa
+### Flow thiết kế dự án — tham chiếu bài báo ET-SSL (Sattar et al., *Scientific Reports*, 2025)
 
-Hệ thống phát hiện xâm nhập mạng (NIDS/NDR) thời gian thực được xây dựng bằng Python với kiến trúc modular, đa luồng (Multi-threading) kết hợp đa tiến trình (Multi-processing), tích hợp cơ chế phát hiện dựa trên luật (Suricata) và Học máy (Machine Learning - Random Forest).
+> Nguồn tham chiếu: "Anomaly detection in encrypted network traffic using self-supervised learning" — DOI: 10.1038/s41598-025-08568-0
+> Model gốc trong bài: **ET-SSL** (Encrypted Traffic anomaly detection via Self-Supervised contrastive Learning) — không cần payload decrypt, không cần nhãn, dùng contrastive loss để tách cụm traffic bình thường/bất thường.
 
----
-
-## 1. Sơ đồ kiến trúc & Luồng dữ liệu (Pipeline Flow)
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          NGUỒN DỮ LIỆU ĐẦU VÀO                             │
-│                                                                             │
-│   Card mạng vật lý (Wi-Fi / Ethernet)                                      │
-│   wlp61s0 — tự động phát hiện qua /proc/net/route                          │
-└───────────────────────────────┬─────────────────────────────────────────────┘
-                                │  Raw IP Packets
-                                ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│  TẦNG 1 — THU THẬP GÓI TIN                    [capture/scapy_capture.py] │
-│                                                                           │
-│  PacketCapture Thread                                                     │
-│  ├─ Bắt gói tin thô bằng Scapy (BPF filter: ip)                          │
-│  └─ Đẩy từng gói tin vào ▶ Packet Queue (max 5000)                       │
-└───────────────────────────────┬───────────────────────────────────────────┘
-                                │  Raw Packets
-                                ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│  TẦNG 2 — GOM NHÓM LUỒNG DỮ LIỆU (FLOW)         [flow/flow_manager.py]  │
-│                                                                           │
-│  FlowWorker-0  ──┐                                                        │
-│  FlowWorker-1  ──┤◀── Packet Queue                                        │
-│                  │                                                        │
-│  Mỗi worker gom gói tin theo 5-tuple:                                     │
-│    (src_ip, dst_ip, src_port, dst_port, protocol)                         │
-│                  │                                                        │
-│  Flush flow khi: idle > 25s  hoặc  lifetime > 120s                        │
-│                  │                                                        │
-│                  └──▶ Flow Queue (max 5000)                               │
-└───────────────────────────────┬───────────────────────────────────────────┘
-                                │  Completed Flows
-                                ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│  TẦNG 3 — TRÍCH XUẤT ĐẶC TRƯNG                [features/feature_extractor]│
-│                                                                           │
-│  FeatureWorker-0  ──┐                                                     │
-│  FeatureWorker-1  ──┤◀── Flow Queue                                       │
-│                     │                                                     │
-│  Tính toán 42 đặc trưng mạng:                                             │
-│    Packet Rate, Byte Rate, SYN Ratio,                                     │
-│    IAT Mean/Std, Flow Duration, ...                                        │
-│                     │                                                     │
-│                     └──▶ Feature Queue — IPC (max 5000)                  │
-└───────────────────────────────┬───────────────────────────────────────────┘
-                                │  Feature Vectors (42 chiều)
-                                ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│  TẦNG 4 — DỰ ĐOÁN HỌC MÁY              [ml/inference.py + model_loader]  │
-│                                                                           │
-│  ⚠ Chạy trên TIẾN TRÌNH RIÊNG (bypass Python GIL)                        │
-│                                                                           │
-│  MLWorker Process-0  ──┐                                                  │
-│  MLWorker Process-1  ──┤◀── Feature Queue (multiprocessing.Queue)         │
-│                        │                                                  │
-│  Mỗi worker tự nạp:                                                       │
-│    model.pkl   → RandomForestClassifier (120 cây)                         │
-│    scaler.pkl  → RobustScaler                                             │
-│    encoder.pkl → LabelEncoder                                             │
-│                        │                                                  │
-│  Output: { label: "DoS", confidence: 0.92 }                              │
-│                        │                                                  │
-│                        └──▶ ML Result Queue — IPC (max 5000)             │
-└────────────┬──────────────────────────┬───────────────────────────────────┘
-             │                          │
-             │  ML Predictions          │  Suricata Events
-             │                          │
-             │          ┌───────────────┘
-             │          │
-             │   ┌──────┴──────────────────────────────────────────────┐
-             │   │  SURICATA ENGINE (song song, độc lập)               │
-             │   │  Đọc tail /var/log/suricata/eve.json                │
-             │   │  → SuricataResult { score, severity, signature }    │
-             │   └──────────────────────────────────────────────────────┘
-             │          │
-             ▼          ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│  TẦNG 5 — CORRELATION ENGINE        [correlation/correlation_engine.py]   │
-│                                                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐  │
-│  │  Luồng A — SuricataIngester                                         │  │
-│  │  Nhận SuricataResult → lưu vào Rule Buffer (TTL=60s, key=5-tuple)  │  │
-│  └─────────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐  │
-│  │  Luồng B — MLCorrelator                                             │  │
-│  │  Nhận MLResult → tìm Suricata match theo 5-tuple → tính điểm       │  │
-│  │                                                                     │  │
-│  │  RiskScorer (3 chế độ):                                             │  │
-│  │   MODE A — Cả hai:     S×0.75 + M×conf^1.5×0.25 + boost(+15)       │  │
-│  │   MODE B — Suricata:   = Suricata score (ML không can thiệp)        │  │
-│  │   MODE C — ML only:    = score × conf^1.5  (nếu conf ≥ 0.60)       │  │
-│  └─────────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│  ┌─────────────────────────────────────────────────────────────────────┐  │
-│  │  Luồng C — SuricataFlusher                                          │  │
-│  │  Mỗi 5 giây: dọn các Suricata event hết TTL → correlate độc lập    │  │
-│  └─────────────────────────────────────────────────────────────────────┘  │
-│                                                                           │
-│                    Risk Score                                             │
-│              ┌─────────┴──────────┐                                       │
-│              │                    │                                       │
-│           < 30                 ≥ 30                                       │
-│           BENIGN               Alert Queue                                │
-│           (bỏ qua)                                                        │
-└────────────────────────────────────┬──────────────────────────────────────┘
-                                     │
-                                     ▼
-┌───────────────────────────────────────────────────────────────────────────┐
-│  TẦNG 6 — CẢNH BÁO & LƯU TRỮ              [alert/alert_manager.py]      │
-│                                                                           │
-│  AlertConsumer Thread đọc Alert Queue → AlertManager                     │
-│                                                                           │
-│   ├──▶ logs/alert.log    (JSON tóm tắt — dành cho SIEM)                  │
-│   ├──▶ logs/alerts.json  (JSON đầy đủ — detail mọi trường)               │
-│   └──▶ PostgreSQL        (JSONB insert — Neon Cloud, lưu lâu dài)        │
-└───────────────────────────────────────────────────────────────────────────┘
-
-                    ┌──────────────────────────────────┐
-                    │  METRICS COLLECTOR (chạy ngầm)   │
-                    │  Đếm: packets, flows, predictions │
-                    │  Mỗi 30s xuất ra logs/metrics.log │
-                    └──────────────────────────────────┘
-
-Alert Level:
-  0–30   →  BENIGN   (không alert)
-  30–60  →  LOW
-  60–80  →  MEDIUM
-  80–100 →  CRITICAL
-```
-
-### Chi tiết luồng xử lý:
-
-1. **Packet Capture** — `capture/scapy_capture.py`
-   - Chạy trên một luồng riêng, sử dụng Scapy bắt gói tin IP thô.
-   - Tự động dò tìm card mạng đang hoạt động (xem mục 3).
-
-2. **Flow Aggregation** — `flow/flow_manager.py`
-   - Gom nhóm gói tin theo 5-tuple `(src_ip, dst_ip, src_port, dst_port, proto)`.
-   - Flush flow sang queue khi hết idle timeout (25s) hoặc hard timeout (120s).
-
-3. **Feature Extraction** — `features/feature_extractor.py`
-   - Trích xuất **42 đặc trưng** tương thích chuẩn CICFlowMeter.
-   - Output là vector số thực để đưa vào mô hình ML.
-
-4. **ML Inference** — `ml/inference.py` + `ml/model_loader.py`
-   - Chạy trên các **tiến trình độc lập** (`multiprocessing.Process`) để bypass Python GIL.
-   - Giao tiếp qua `multiprocessing.Queue` (IPC thực sự giữa các OS process).
-   - Mô hình: `RandomForestClassifier`, scaler: `RobustScaler`, encoder: `LabelEncoder`.
-   - Tắt hoàn toàn verbose `[Parallel(...)]` output của joblib qua `model.verbose = 0`.
-
-5. **Correlation Engine** — `correlation/correlation_engine.py`
-   - Thiết kế event-driven, non-blocking, 3 luồng nội bộ.
-   - Xem chi tiết ở **Mục 2**.
-
-6. **Alert & Persistence** — `alert/alert_manager.py`
-   - Ghi `logs/alerts.json` (JSON Lines, đầy đủ chi tiết).
-   - Ghi `logs/alert.log` (tóm tắt có cấu trúc cho SIEM).
-   - Lưu vào PostgreSQL (Neon Cloud) dưới dạng JSONB.
+**Phạm vi dự án:** chạy toàn bộ trên laptop, không triển khai/test trên thiết bị edge vật lý (Raspberry Pi, Jetson...). "Edge AI" ở đây được hiểu theo hướng **thiết kế model/pipeline nhẹ, tối ưu để phù hợp triển khai edge trong tương lai**, còn thực nghiệm thì đo trên laptop và báo cáo dưới dạng phân tích/ước lượng.
 
 ---
 
-## 2. Detection Correlation Engine
+## 0. Tóm tắt kiến trúc tổng thể
 
-### Kiến trúc song song — Hai engine độc lập
-
-```
-         Network Traffic
-                |
-       +--------+--------+
-       |                 |
-       v                 v
- Suricata Engine       ML Engine
- (Signature-based)     (Behavioral)
- eve.json tail         RandomForest
-       |                 |
-       v                 v
- SuricataResult       MLResult
-       \               /
-        \             /
-         v           v
-     CorrelationEngine
-            |
-            v
-       RiskScorer
-            |
-     +------+------+
-     |             |
-     v             v
-  ALERT         BENIGN
+```mermaid
+flowchart LR
+    A[Traffic mạng<br/>TLS/VPN/DoH] --> B[Bộ bắt gói tin<br/>Packet Capture]
+    B --> C[Flow Reconstruction<br/>gom gói thành flow]
+    C --> D[Feature Extraction<br/>PL, IPI, FD, PC, PM]
+    D --> E[Chuẩn hóa & Encode<br/>Scaler + Encoder θ]
+    E --> F[Model ET-SSL<br/>Embedding zi]
+    F --> G{Anomaly Score<br/>S(ti) > δ ?}
+    G -- Bình thường --> H[Log / Dashboard]
+    G -- Bất thường --> I[Cảnh báo Alert<br/>local log / webhook]
+    H --> J[Incremental Update<br/>μ_norm]
+    I --> J
+    J --> F
 ```
 
-Hai engine hoạt động **hoàn toàn độc lập** — không block, không phụ thuộc lẫn nhau. Kết quả từ mỗi engine được đưa vào `CorrelationEngine` qua các queue riêng biệt.
+**3 khối chính của ET-SSL (theo bài báo, mục "Methodology"):**
+1. **Feature extraction** — trích đặc trưng thống kê/thời gian từ flow mã hóa (không giải mã payload).
+2. **Contrastive representation learning** — encoder học embedding sao cho traffic bình thường tụ gần nhau, bất thường bị đẩy ra xa.
+3. **Anomaly detection + incremental learning** — tính khoảng cách tới tâm cụm bình thường `μ_norm`, so với ngưỡng `δ`, và cập nhật `μ_norm` theo thời gian để thích nghi traffic mới.
 
-### 3 chế độ tính điểm rủi ro (RiskScorer)
+Con số tham chiếu từ bài báo (chạy trên RTX 3090) để bạn đặt mục tiêu so sánh — không kỳ vọng đạt y hệt trên laptop, chỉ dùng làm đường tham chiếu (baseline) khi viết báo cáo:
 
-| Mode                       | Điều kiện                    | Công thức                               |
-| -------------------------- | ---------------------------- | --------------------------------------- |
-| **MODE A** — Cả hai engine | Suricata + ML đều có kết quả | `(S×0.75) + (M×conf^1.5×0.25) + boost`  |
-| **MODE B** — Suricata only | Chỉ Suricata phát hiện       | `= Suricata score` (ML không can thiệp) |
-| **MODE C** — ML only       | Suricata offline/chưa cài    | `= score × conf^1.5` nếu `conf ≥ 0.60`  |
+| Chỉ số | Giá trị trong bài (server GPU) |
+|---|---|
+| Accuracy | 96.8% (CIC-Darknet2020) |
+| TPR / FPR | 92.7% / 1.2% |
+| Latency | 15–25 ms |
+| Throughput | tới 10 Gbps / ~1500–1900 flows/s |
+| Năng lượng | ~0.5 J/detection |
+| Zero-day TPR | ~90%, FPR ~5% |
 
-**Thiết kế trọng số không đối xứng:**
+→ Mục tiêu thực tế trên laptop: **giữ được accuracy trong khoảng 90–95%**, đo latency/throughput/CPU/RAM thật trên máy bạn, và **tối ưu hóa model (quantization/pruning) như một bài toán phân tích hiệu năng**, chứng minh model *có tiềm năng* chạy trên thiết bị công suất thấp — không cần deploy thật.
 
-- **Suricata weight = 0.75** — Rule-based, signature đã được xác minh → đáng tin cậy cao.
-- **ML weight = 0.25** — Behavioral, xác suất → có thể sai (ví dụ: dự đoán Benign trong khi đang bị DoS).
+---
 
-### Confidence Scaling (Chỉnh điểm ML theo độ tin cậy)
+## 1. Giai đoạn 1 — Chuẩn bị dữ liệu & đặc trưng
 
-Điểm ML bị nhân với hệ số `confidence^1.5` để phạt các dự đoán không chắc chắn:
+- [ ] **Chọn dataset** (giống bài báo để so sánh kết quả):
+  - CIC-Darknet2020 — https://www.kaggle.com/datasets/dhoogla/cicdarknet2020
+  - ISCX VPN-nonVPN (VNAT) — https://www.ll.mit.edu/r-d/datasets/vpnnonvpn-network-application-traffic-dataset-vnat
+  - UNSW-NB15 — https://www.kaggle.com/datasets/dhoogla/unswnb15
+- [ ] **Làm sạch dữ liệu**: loại bỏ flow thiếu/hỏng, chuẩn hóa numeric feature (giống bài báo: scaling để tránh chênh lệch biên độ).
+- [ ] **Trích 5 nhóm đặc trưng flow-level** (không đụng payload):
+  - `Packet Length distribution (PL)`
+  - `Inter-Packet Interval (IPI)`
+  - `Flow Duration (FD)`
+  - `Packet Count (PC)`
+  - `Protocol Metadata (PM)`
+- [ ] **Chia tập**: train 70% / val 15% / test 15% (theo đúng tỉ lệ bài báo, huấn luyện không cần nhãn — self-supervised).
+- [ ] (Tùy chọn, không bắt buộc) Nếu muốn thử traffic thật thay vì chỉ dùng dataset: dùng `tshark`/`nfstream` bắt traffic ngay trên laptop và export flow feature trực tiếp.
 
-| Confidence | Multiplier | Raw Score=80 → Effective                    |
-| ---------- | ---------- | ------------------------------------------- |
-| 95%        | ×0.926     | 74.1                                        |
-| 90%        | ×0.854     | 68.3                                        |
-| 80%        | ×0.716     | 57.2                                        |
-| **70%**    | **×0.587** | **46.9** ← không còn bị tính bằng raw score |
-| 60%        | ×0.465     | 37.2                                        |
-| < 60%      | **bỏ qua** | 0 (ML-only mode floor)                      |
+**Output của giai đoạn này:** bộ feature vector `x_i ∈ R^d` sẵn sàng đưa vào encoder.
 
-**Ví dụ thực tế:** ML dự đoán Benign với confidence 77% trong khi đang bị DoS → `score=0` → Suricata vẫn thắng và tạo cảnh báo `final=56.2 (LOW)`.
+---
 
-### Rule Confidence Boost (+15 điểm)
+## 2. Giai đoạn 2 — Model (bạn đã có sẵn) → chuẩn hóa lại cho pipeline
 
-Khi cả hai engine cùng nhận diện **cùng một loại tấn công** (ví dụ: Suricata: `PortScan`, ML: `PortScan`), điểm được cộng thêm `+15`, giới hạn tối đa `100`.
+Vì bạn đã có model ET-SSL (hoặc tương đương), bước này là **rà soát & đóng gói** model để dùng lại được xuyên suốt pipeline, tách biệt khỏi code training:
 
-### Alert Level
+- [ ] Xác nhận input/output shape của encoder `f_θ(x_i) → z_i`
+- [ ] Xuất/lưu:
+  - trọng số encoder (`.pt` / `.onnx`)
+  - tâm cụm normal `μ_norm` (vector đã học)
+  - ngưỡng anomaly `δ`, hệ số nhạy `κ`, decay `α` (cho incremental update)
+  - scaler dùng để chuẩn hóa feature (phải giống lúc train)
+- [ ] Viết hàm inference thuần (`score = ||f_θ(x) - μ_norm||²`) tách biệt khỏi code training.
 
-| Risk Score | Level                       |
-| ---------- | --------------------------- |
-| 0 – 30     | **BENIGN** (không cảnh báo) |
-| 30 – 60    | **LOW**                     |
-| 60 – 80    | **MEDIUM**                  |
-| 80 – 100   | **CRITICAL**                |
-
-### Luồng Suricata (time-windowed buffer)
-
-```
-Suricata eve.json
-      │
-      ▼
-SuricataIngester Thread
-      │ (push SuricataResult)
-      ▼
-Rule Buffer (dict)     ← key = 5-tuple, TTL = 60 giây
-      │
-      ├─── MLCorrelator dò tìm match khi có MLResult
-      │
-      └─── SuricataFlusher (mỗi 5s): flush các event hết TTL
-           → correlate Suricata-only → alert nếu score ≥ 30
+```mermaid
+flowchart TD
+    M1[Model đã train<br/>encoder f_θ] --> M2[Export ONNX / TorchScript]
+    M2 --> M3[Quantization<br/>FP32 → INT8/FP16]
+    M3 --> M4[Pruning nếu cần<br/>giảm tham số dư thừa]
+    M4 --> M5[Benchmark trên laptop<br/>latency, RAM, CPU%]
+    M5 -->|đạt yêu cầu| M6[Đóng gói inference engine]
+    M5 -->|chưa đạt| M3
 ```
 
 ---
 
-## 3. Logging & Metrics
+## 3. Giai đoạn 3 — Tối ưu hóa model (phân tích hiệu năng, chạy trên laptop)
 
-### Cấu trúc thư mục `logs/` (tại thư mục gốc dự án)
+Không deploy lên thiết bị thật, nhưng vẫn thực hiện tối ưu hóa để **chứng minh model đủ nhẹ cho môi trường edge** — đo lường mọi thứ trực tiếp trên laptop.
 
-| File          | Nội dung                                          | Format     |
-| ------------- | ------------------------------------------------- | ---------- |
-| `nids.log`    | Lifecycle, kết nối DB, cấu hình worker            | JSON       |
-| `debug.log`   | Chi tiết flow, ML latency (chỉ khi `debug: true`) | JSON       |
-| `alert.log`   | Cảnh báo tấn công tóm tắt — dành cho SIEM         | JSON Lines |
-| `alerts.json` | Chi tiết đầy đủ mọi cảnh báo                      | JSON Lines |
-| `metrics.log` | Hiệu năng định kỳ (packets, flows, CPU, RAM)      | JSON       |
+| Kỹ thuật | Mục đích | Công cụ gợi ý |
+|---|---|---|
+| **Quantization** (FP32 → INT8/FP16) | Giảm kích thước model, tăng tốc inference CPU | ONNX Runtime, PyTorch Quantization |
+| **Pruning** | Loại bớt trọng số/kênh không quan trọng | `torch.nn.utils.prune` |
+| **Knowledge Distillation** (tùy chọn) | Train model nhỏ hơn "học" từ model gốc | Teacher-student setup |
+| **Format triển khai** | Chạy nhanh, tương thích inference nhẹ | ONNX Runtime (CPUExecutionProvider) |
 
-### Multi-processing Safe Logging
+**Cách mô phỏng ràng buộc "edge" ngay trên laptop, không cần thiết bị thật:**
 
-Tất cả tiến trình con `MLWorker` gửi log về qua `QueueHandler` → `multiprocessing.Queue` → `QueueListener` tại Main Process → `RotatingFileHandler` (100MB/file, giữ 5 backup).
+| Ràng buộc edge thật | Cách giả lập trên laptop |
+|---|---|
+| CPU yếu, không GPU | Ép inference chạy CPU-only: `CUDA_VISIBLE_DEVICES=""` hoặc ONNX Runtime CPUExecutionProvider |
+| RAM giới hạn (1–4GB) | Giới hạn RAM tiến trình bằng Docker: `docker run --memory=1g ...` |
+| Số core giới hạn | Giới hạn CPU: `docker run --cpus=2 ...` hoặc `taskset -c 0,1 python inference.py` |
+| Tốc độ xử lý chậm hơn phần cứng thật | So sánh **tương đối**: model sau tối ưu nhanh hơn/nhỏ hơn model gốc bao nhiêu %, thay vì so ms tuyệt đối với bài báo |
+| Đo năng lượng tiêu thụ | Không đo J/detection thật được → dùng công cụ ước lượng qua CPU RAPL: `pyRAPL`, `powerjoular` (hầu hết CPU Intel/AMD hiện đại hỗ trợ), hoặc bỏ qua chỉ số này và ghi rõ trong giới hạn nghiên cứu |
 
----
-
-## 4. Cơ chế tự động dò tìm Card mạng
-
-Thuật toán 3 lớp tại `capture/scapy_capture.py`:
-
-1. **Default Route** — Đọc `/proc/net/route` để tìm interface đang giữ tuyến `0.0.0.0` (gateway Internet).
-2. **Socket Probe** — Mở UDP socket tới `8.8.8.8`, lấy địa chỉ IP nguồn và ánh xạ ngược về tên interface.
-3. **Private IP Scan** — Quét tất cả interface, chọn cái đầu tiên có IP thuộc dải `192.168.x.x`, `10.x.x.x`, `172.x.x.x`.
+Kết quả của giai đoạn này nên trình bày dưới dạng: *"model sau quantization giảm X% kích thước, giảm Y% latency trên CPU laptop — cho thấy tiềm năng triển khai trên thiết bị edge công suất thấp"*, thay vì số liệu đo trên phần cứng thật.
 
 ---
 
-## 5. Hướng dẫn vận hành
+## 4. Giai đoạn 4 — Pipeline thu thập & suy luận (chạy toàn bộ trên laptop)
 
-### Cấu hình (`darktrace-nids/config.yaml`)
+```mermaid
+sequenceDiagram
+    participant NIC as NIC của laptop / file pcap
+    participant Cap as Packet Capture (libpcap/nfstream)
+    participant Flow as Flow Aggregator
+    participant Feat as Feature Extractor
+    participant Inf as Inference Engine (CPU laptop)
+    participant Alert as Alert Manager
 
-```yaml
-logging:
-  level: INFO # DEBUG | INFO | WARNING | ERROR
-  debug: false # true = bật debug.log cực chi tiết
-
-flow:
-  idle_timeout: 25.0 # giây không hoạt động → flush flow
-  sweep_interval: 5.0 # tần suất quét dọn expired flows
-
-workers:
-  flow_workers: 2
-  feature_workers: 2
-  ml_workers: 2
-
-correlation:
-  rule_weight: 0.75 # Suricata weight (rule-based → trusted more)
-  ml_weight: 0.25 # ML weight (probabilistic → trusted less)
-  alert_threshold: 30.0
+    NIC->>Cap: Gói tin TLS/VPN mã hóa (live hoặc replay .pcap)
+    Cap->>Flow: Gom theo 5-tuple (IP src/dst, port, proto)
+    Flow->>Feat: Flow hoàn chỉnh (hoặc theo time-window)
+    Feat->>Inf: Feature vector x_i chuẩn hóa
+    Inf->>Inf: z_i = f_θ(x_i); S = ||z_i - μ_norm||²
+    Inf-->>Alert: Nếu S > δ → gắn cờ bất thường
+    Alert-->>Alert: Ghi log / hiển thị dashboard local
+    Inf->>Inf: Cập nhật μ_norm định kỳ (incremental learning)
 ```
 
-### Kết nối Suricata (`darktrace-nids/.env`)
-
-```env
-SURICATA_EVE_JSON=/var/log/suricata/eve.json
-```
-
-Nếu Suricata chưa được cài đặt, hệ thống tự động chuyển sang **ML-only mode** và vẫn tạo cảnh báo khi confidence ML đủ cao (≥ 60%).
-
-### Khởi chạy
-
-```bash
-sh start.sh
-```
-
-Script tự động cấp quyền `CAP_NET_RAW` cho Python binary (không cần chạy `sudo` mỗi lần).
-
-### Theo dõi thời gian thực
-
-```bash
-# Cảnh báo tấn công
-tail -f logs/alert.log
-
-# Debug chi tiết khi phát triển
-tail -f logs/debug.log
-
-# Hiệu năng hệ thống
-tail -f logs/metrics.log
-```
-
-### Tắt hệ thống
-
-Nhấn `Ctrl+C` — hệ thống sẽ tắt gracefully, đợi tất cả worker dừng sạch trước khi thoát.
+**Thành phần đề xuất, tất cả chạy local trên laptop:**
+- Packet capture: `nfstream` (dễ dùng nhất, export flow feature sẵn) hoặc `tshark` đọc trực tiếp NIC/file `.pcap`
+- Traffic đầu vào: có thể **replay file `.pcap` từ dataset** (CIC-Darknet2020, ISCX VPN-nonVPN) để giả lập traffic đến real-time, không cần traffic mạng thật
+- Flow aggregation: cửa sổ thời gian (time-window) hoặc theo kết thúc flow (FIN/timeout)
+- Inference engine: ONNX Runtime chạy CPU, đo latency mỗi flow
+- Cảnh báo: đơn giản hóa thành log file / dashboard nhỏ (ví dụ Streamlit) chạy local — không cần MQTT/broker nếu chỉ có 1 node
 
 ---
 
-## 6. Cấu trúc thư mục dự án
+## 5. Giai đoạn 5 — Đánh giá (benchmark trên laptop, đối chiếu cấu trúc bài báo)
+
+Tái hiện cấu trúc các bảng đánh giá trong bài báo, nhưng đo trên môi trường laptop:
+
+- [ ] **Detection performance**: Precision, Recall, F1, Accuracy, FPR (đối chiếu Bảng 4 trong bài)
+- [ ] **Zero-day detection**: thêm attack pattern chưa từng thấy vào test set, đo TPR/F1/latency (đối chiếu Bảng 5)
+- [ ] **Scalability trên laptop**: throughput / CPU / RAM theo traffic load tăng dần (đối chiếu Bảng 6, 11)
+- [ ] **So sánh baseline**: Random Forest (supervised), K-means (unsupervised) vs. model của bạn (đối chiếu Bảng 8)
+- [ ] **Hiệu quả tối ưu hóa**: so sánh model gốc vs. model đã quantize/prune về size, latency, accuracy (thay thế phần "Energy efficiency" của bài báo, vì không đo được năng lượng thiết bị thật)
+- [ ] **Robustness / evasion**: test với traffic có obfuscation (padding, timing randomization) (đối chiếu Bảng 12)
+- [ ] **Privacy validation**: xác nhận không có bước nào giải mã payload — quan trọng để giữ đúng tinh thần "privacy-preserving" của ET-SSL
+
+---
+
+## 6. Giai đoạn 6 — Thích nghi liên tục (Incremental Learning)
+
+Theo công thức cập nhật tâm cụm trong bài báo:
 
 ```
-darktrace-nids/
-├── main.py                     # Điểm khởi động duy nhất
-├── worker_manager.py           # Điều phối toàn bộ pipeline
-├── config.py / config.yaml     # Cấu hình hệ thống
-├── capture/
-│   └── scapy_capture.py        # Auto-detect interface + bắt gói tin
-├── flow/
-│   └── flow_manager.py         # Gom nhóm flow theo 5-tuple
-├── features/
-│   └── feature_extractor.py    # Trích xuất 42 đặc trưng CICFlowMeter
-├── ml/
-│   ├── inference.py            # MLWorker (multiprocessing)
-│   ├── model_loader.py         # Tải model + suppress warnings
-│   └── models/                 # model.pkl, scaler.pkl, encoder.pkl
-├── correlation/
-│   ├── correlation_engine.py   # Event-driven engine (3 luồng nội bộ)
-│   ├── risk_score.py           # RiskScorer — confidence scaling
-│   ├── models.py               # SuricataResult, MLResult, CorrelationAlert
-│   └── thresholds.py           # Ngưỡng, trọng số, severity mapping
-├── alert/
-│   ├── alert_manager.py        # Ghi log + PostgreSQL
-│   └── json_writer.py          # Ghi alerts.json JSON Lines
-├── suricata/
-│   └── eve_reader.py           # Tail file eve.json thời gian thực
-├── nids_queue/
-│   └── event_queue.py          # BoundedQueue (thread + multiprocessing)
-├── logger/                     # NIDSLogger, QueueListener, MetricsCollector
-└── database/
-    └── postgres.py             # PostgresWriter — Neon Cloud
+μ_norm^(t+1) = α · μ_norm^(t) + (1-α) · (1/|N|) Σ z_i,  i ∈ N
+```
+
+- [ ] Thiết lập chu kỳ cập nhật (ví dụ mỗi N flow mới được xác nhận là "normal")
+- [ ] Chỉ cập nhật `μ_norm` bằng traffic **đã được xác nhận bình thường** (tránh model tự "học" luôn cả traffic bất thường vào baseline)
+- [ ] Lưu log để có thể rollback nếu drift bất thường xảy ra
+- [ ] Test bằng cách chia dataset thành nhiều "đợt" traffic theo thời gian, giả lập traffic drift, xem model có thích nghi tốt không — vẫn hoàn toàn thực hiện được trên laptop bằng dữ liệu offline
+
+---
+
+## 7. Cấu trúc thư mục project đề xuất
+
+```
+edge-ai-traffic-anomaly/
+├── data/
+│   ├── raw/                  # dataset gốc (CIC-Darknet2020, ISCX, UNSW-NB15)
+│   ├── processed/            # feature đã trích, đã chuẩn hóa
+│   └── scaler.pkl
+├── model/
+│   ├── encoder.py            # kiến trúc f_θ
+│   ├── weights/               # checkpoint gốc (đã có)
+│   ├── export_onnx.py
+│   └── quantize.py
+├── pipeline/
+│   ├── capture.py             # đọc pcap / bắt traffic laptop
+│   ├── flow_aggregator.py
+│   ├── feature_extractor.py   # PL, IPI, FD, PC, PM
+│   └── inference.py           # load ONNX, tính S(ti), so ngưỡng δ
+├── optimization/
+│   ├── benchmark.py           # đo latency, RAM, CPU% trên laptop
+│   └── compare_before_after.py # so sánh model gốc vs. đã quantize/prune
+├── dashboard/
+│   └── app.py                  # dashboard local (Streamlit) hiển thị traffic + cảnh báo
+├── evaluation/
+│   ├── metrics.py             # Precision/Recall/F1/FPR
+│   ├── zero_day_test.py
+│   └── drift_simulation.py     # giả lập traffic drift cho incremental learning
+├── configs/
+│   └── config.yaml            # δ, κ, α, τ, đường dẫn model
+└── README.md
 ```
 
 ---
 
-## 7. Yêu cầu hệ thống
+## 8. Lộ trình mốc thời gian gợi ý (6 tuần, chỉ chạy trên laptop)
 
-| Thành phần            | Phiên bản |
-| --------------------- | --------- |
-| Python                | 3.12+     |
-| scikit-learn          | 1.9.0     |
-| scapy                 | 2.6+      |
-| psutil                | 6.0+      |
-| psycopg2-binary       | 2.9+      |
-| Suricata _(tùy chọn)_ | 7.x       |
+| Tuần | Công việc chính |
+|---|---|
+| 1 | Thu thập dataset, làm sạch, trích feature, xác nhận model hiện có chạy đúng offline |
+| 2 | Xuất model sang ONNX, benchmark baseline trên laptop (đối chiếu số liệu với bài báo) |
+| 3 | Quantization + pruning, so sánh hiệu năng trước/sau trên laptop |
+| 4 | Xây pipeline capture (replay .pcap) → flow aggregation → feature extraction → inference real-time |
+| 5 | Test zero-day, robustness với evasion traffic; cài incremental learning + giả lập drift |
+| 6 | Tổng hợp báo cáo, so sánh với con số trong bài báo, làm dashboard demo |
 
-Cài đặt dependencies:
+---
 
-```bash
-pip install -r darktrace-nids/requirements.txt
-```
+## 9. Ghi chú quan trọng khi triển khai
+
+- **Không giải mã payload ở bất kỳ bước nào** — đây là điểm cốt lõi của ET-SSL và giúp bạn tuân thủ GDPR/HIPAA nếu cần.
+- Ngưỡng `δ`, `κ`, `τ`, `α` nên tinh chỉnh lại bằng validation set của chính bạn (không dùng nguyên số liệu bài báo vì dataset/thiết bị khác nhau).
+- Nếu accuracy giảm mạnh sau quantization, thử fine-tune lại vài epoch ở độ chính xác thấp hơn (quantization-aware training) thay vì chỉ post-training quantization.
+- Vì không test trên thiết bị thật, khi viết báo cáo/đồ án nên nêu rõ trong phần **giới hạn nghiên cứu (limitations)**: kết quả tối ưu hóa và benchmark được đo trên laptop, mô phỏng ràng buộc tài nguyên bằng phần mềm (giới hạn CPU/RAM), chưa kiểm chứng trên phần cứng edge vật lý — đây có thể là hướng phát triển tiếp theo.
