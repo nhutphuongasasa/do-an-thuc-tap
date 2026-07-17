@@ -1,0 +1,38 @@
+# ET-SSL Edge AI — Requirements
+# Tham chiếu: Sattar et al., Scientific Reports 2025
+
+# Core ML
+torch>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# ONNX
+onnx>=1.14.0
+onnxruntime>=1.16.0
+
+# Data processing
+pandas>=2.0.0
+scipy>=1.11.0
+
+# Visualization
+matplotlib>=3.7.0
+plotly>=5.15.0
+
+# Dashboard
+streamlit>=1.28.0
+
+# Network/packet capture (tùy chọn)
+# nfstream>=6.5.0           # Flow reconstruction (cần libpcap)
+scapy>=2.5.0              # Packet capture
+
+# Resource monitoring
+psutil>=5.9.0
+
+# Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+requests>=2.31.0
+
+# (Optional) Energy monitoring
+# pyRAPL>=0.2.3             # CPU energy (Intel RAPL, Linux only)

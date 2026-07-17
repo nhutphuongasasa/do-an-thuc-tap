@@ -1,0 +1,107 @@
+# =====================================================================
+# ET-SSL Edge AI Traffic Anomaly Detection — Config Trung Tâm
+# Tham chiếu: Sattar et al., Scientific Reports 2025
+# DOI: 10.1038/s41598-025-08568-0
+# =====================================================================
+
+# ---- Đường dẫn model artifacts ----
+model:
+  model_dir: "../TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
+  encoder_fp32: "encoder_fp32.pt"
+  encoder_int8: "encoder_int8.pt"
+  encoder_onnx: "encoder_v5.onnx"
+  mu_norm: "mu_norm.npy"
+  delta_file: "delta.npy"
+  config_file: "config.json"
+  scaler: "scaler.pkl"          # sẽ tạo khi có data; nếu thiếu thì tạo mới từ data
+
+  # Kiến trúc encoder (phải khớp với model đã train)
+  input_dim: 20
+  hidden_dim: 256
+  embed_dim: 64
+  dropout: 0.2
+
+# ---- Tham số anomaly detection ----
+detection:
+  delta: 105.68504333496094   # ngưỡng anomaly (từ training); sẽ tinh chỉnh lại sau
+  kappa: 1.5                  # hệ số nhạy κ (bội số của delta khi auto-tune)
+  # score > delta → anomaly
+
+# ---- Incremental learning ----
+incremental:
+  alpha: 0.99                 # decay factor α: μ^(t+1) = α·μ^(t) + (1-α)·mean(z_normal)
+  update_interval: 100        # cập nhật μ_norm sau mỗi N flow confirmed normal
+  min_normal_batch: 10        # số flow normal tối thiểu để trigger update
+  rollback_window: 10         # số checkpoint μ_norm lưu lại để rollback
+
+# ---- Pipeline parameters ----
+pipeline:
+  time_window_sec: 60         # cửa sổ thời gian gom flow (giây)
+  flow_timeout_sec: 30        # flow timeout nếu không có packet mới
+  max_queue_size: 1000        # số flow tối đa trong hàng đợi inference
+  batch_size: 32              # batch inference size
+
+# ---- Feature schema (theo thứ tự model expect) ----
+features:
+  names:
+    - median_packets_delta_time
+    - packets_IAT_mean
+    - fwd_init_win_bytes
+    - fwd_packets_IAT_mean
+    - bwd_init_win_bytes
+    - rst_flag_percentage_in_total
+    - mode_packets_delta_time
+    - bwd_packets_IAT_mean
+    - rst_flag_counts
+    - psh_flag_percentage_in_total
+    - fwd_min_header_bytes
+    - fwd_segment_size_min
+    - skewness_payload_bytes_delta_len
+    - payload_bytes_median
+    - median_bwd_packets_delta_len
+    - fwd_payload_bytes_median
+    - mean_packets_delta_time
+    - cov_bwd_payload_bytes_delta_len
+    - mean_packets_delta_len
+    - ack_flag_percentage_in_total
+
+# ---- Dataset paths ----
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  # Mapping tên dataset → thư mục con
+  datasets:
+    unsw_nb15:
+      dir: "data/raw/unsw-nb15"
+      label_col: "label"         # 0=normal, 1=attack
+      label_normal_val: 0
+    cic_darknet2020:
+      dir: "data/raw/cic-darknet2020"
+      label_col: "Label"
+      label_normal_val: "BENIGN"
+  # Split ratio
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_seed: 42
+
+# ---- Benchmark ----
+benchmark:
+  n_warmup: 20
+  n_runs: 1000
+  batch_sizes: [1, 8, 32, 64, 128]
+  cpu_limit_cores: null        # null = dùng tất cả; set số int để giả lập edge (vd: 2)
+
+# ---- Dashboard ----
+dashboard:
+  host: "localhost"
+  port: 8501
+  refresh_interval_sec: 2
+  max_display_flows: 200       # số flow hiển thị trên chart
+  alert_log_path: "logs/alerts.jsonl"
+
+# ---- Logging ----
+logging:
+  log_dir: "logs"
+  level: "INFO"                # DEBUG | INFO | WARNING
+  mu_norm_log: "logs/mu_norm_history.npy"

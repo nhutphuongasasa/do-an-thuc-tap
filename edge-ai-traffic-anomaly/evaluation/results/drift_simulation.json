@@ -1,0 +1,69 @@
+{
+  "config": {
+    "n_epochs": 3,
+    "alpha": 0.99,
+    "drift_magnitude": 2.0
+  },
+  "incremental": [
+    {
+      "epoch": 1,
+      "drift": 0.667,
+      "mu_drift": 0.222612,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "fpr": 0.0,
+      "f1": 1.0
+    },
+    {
+      "epoch": 2,
+      "drift": 1.333,
+      "mu_drift": 0.411232,
+      "accuracy": 0.992,
+      "precision": 0.9494,
+      "recall": 1.0,
+      "fpr": 0.0094,
+      "f1": 0.974
+    },
+    {
+      "epoch": 3,
+      "drift": 2.0,
+      "mu_drift": 0.558385,
+      "accuracy": 0.908,
+      "precision": 0.6198,
+      "recall": 1.0,
+      "fpr": 0.1082,
+      "f1": 0.7653
+    }
+  ],
+  "static": [
+    {
+      "epoch": 1,
+      "drift": 0.667,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "fpr": 0.0,
+      "f1": 1.0
+    },
+    {
+      "epoch": 2,
+      "drift": 1.333,
+      "accuracy": 0.992,
+      "precision": 0.9494,
+      "recall": 1.0,
+      "fpr": 0.0094,
+      "f1": 0.974
+    },
+    {
+      "epoch": 3,
+      "drift": 2.0,
+      "accuracy": 0.844,
+      "precision": 0.4902,
+      "recall": 1.0,
+      "fpr": 0.1835,
+      "f1": 0.6579
+    }
+  ],
+  "final_mu_total_drift": 1.178924
+}

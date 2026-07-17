@@ -1,0 +1,33 @@
+{
+  "dataset": "synthetic",
+  "baseline_fp_rate": 0.0,
+  "known_attack_tpr": 0.975,
+  "zero_day_avg_tpr": 0.2625,
+  "patterns": {
+    "high_volume_ddos": {
+      "tpr": 0.0,
+      "mean_score": 25.83,
+      "std_score": 13.56,
+      "n_samples": 100
+    },
+    "low_slow": {
+      "tpr": 0.0,
+      "mean_score": 5.08,
+      "std_score": 3.0,
+      "n_samples": 100
+    },
+    "evasion": {
+      "tpr": 0.13,
+      "mean_score": 64.19,
+      "std_score": 36.23,
+      "n_samples": 100
+    },
+    "timing_burst": {
+      "tpr": 0.92,
+      "mean_score": 389.26,
+      "std_score": 309.37,
+      "n_samples": 100
+    }
+  },
+  "delta_used": 105.68504333496094
+}
