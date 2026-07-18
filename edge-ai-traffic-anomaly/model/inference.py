@@ -1,50 +1,77 @@
 """
-inference.py — ET-SSL Inference Engine
+inference.py — Cỗ máy suy luận ET-SSL (Inference Engine).
 
-Hàm suy luận thuần: score = ||f_θ(x) - μ_norm||²
-Hỗ trợ 3 backend: PyTorch FP32, PyTorch INT8, ONNX Runtime (CPU).
-Không phụ thuộc vào training code.
+Hàm suy luận thuần túy: S(x) = ||f_θ(x) - μ_norm||²
+Hỗ trợ 3 backend: PyTorch FP32, PyTorch INT8, ONNX Runtime (chỉ dùng CPU).
+Mô-đun này độc lập hoàn toàn với mã huấn luyện.
 
 Tham chiếu: Sattar et al. 2025, mục "Anomaly Detection"
 """
 
-import numpy as np
 import json
-import time
 import logging
+import time
 from pathlib import Path
-from typing import Optional, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Protocol
+
 import joblib
+import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
+# =====================================================================
+# Khai báo Giao thức (Strategy Pattern)
+# =====================================================================
+class InferenceBackend(Protocol):
+    """
+    Giao thức chuẩn cho các mô-đun thực thi suy luận (Backend).
+    Mọi backend (PyTorch, ONNX) đều phải tuân thủ chữ ký hàm này.
+    """
+    backend_name: str
+
+    def predict_batch(self, x: np.ndarray) -> np.ndarray:
+        """
+        Thực hiện dự đoán cho một lô dữ liệu.
+
+        Args:
+            x: Mảng numpy chứa vector đặc trưng đầu vào, shape (N, input_dim).
+
+        Returns:
+            Mảng numpy chứa vector nhúng đầu ra, shape (N, embed_dim).
+        """
+        ...
 
 
 # =====================================================================
 # Backend: PyTorch
 # =====================================================================
 class _TorchBackend:
-    """PyTorch inference backend (FP32 hoặc INT8)."""
+    """Backend thực thi suy luận sử dụng PyTorch (FP32 hoặc INT8)."""
 
     def __init__(self, model_dir: Path, use_int8: bool = False):
         import torch
         from model.encoder import load_encoder
 
         fname = "encoder_int8.pt" if use_int8 else "encoder_fp32.pt"
-        self.model = load_encoder(
-            weights_path=model_dir / fname,
-            config_path=model_dir / "config.json",
-            device="cpu",
-        )
+        weights_path = model_dir / fname
+        
+        if not weights_path.exists():
+            raise FileNotFoundError(f"Không tìm thấy tệp trọng số PyTorch tại: {weights_path}")
+
+        try:
+            self.model = load_encoder(
+                weights_path=weights_path,
+                config_path=model_dir / "config.json",
+                device="cpu",
+            )
+        except Exception as e:
+            raise RuntimeError(f"Lỗi khi nạp mô hình PyTorch: {e}") from e
+            
         self._torch = torch
         self.backend_name = "PyTorch-INT8" if use_int8 else "PyTorch-FP32"
 
     def predict_batch(self, x: np.ndarray) -> np.ndarray:
-        """
-        Args:
-            x: (N, input_dim) numpy array đã scale
-        Returns:
-            z: (N, embed_dim) numpy embeddings
-        """
         tensor = self._torch.from_numpy(x.astype(np.float32))
         with self._torch.no_grad():
             z = self.model(tensor).numpy()
@@ -55,24 +82,29 @@ class _TorchBackend:
 # Backend: ONNX Runtime
 # =====================================================================
 class _OnnxBackend:
-    """ONNX Runtime inference backend — CPU only, phù hợp edge."""
+    """Backend thực thi suy luận sử dụng ONNX Runtime, tối ưu cho CPU thiết bị biên."""
 
     def __init__(self, model_dir: Path):
         import onnxruntime as ort
 
         onnx_path = model_dir / "encoder_v5.onnx"
         if not onnx_path.exists():
-            raise FileNotFoundError(f"ONNX model not found: {onnx_path}")
+            raise FileNotFoundError(f"Không tìm thấy tệp mô hình ONNX tại: {onnx_path}")
 
         opts = ort.SessionOptions()
         opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        opts.intra_op_num_threads = 1  # giả lập edge CPU
+        # Giới hạn 1 luồng để mô phỏng và đo lường ổn định trên thiết bị biên
+        opts.intra_op_num_threads = 1  
 
-        self.session = ort.InferenceSession(
-            str(onnx_path),
-            sess_options=opts,
-            providers=["CPUExecutionProvider"],
-        )
+        try:
+            self.session = ort.InferenceSession(
+                str(onnx_path),
+                sess_options=opts,
+                providers=["CPUExecutionProvider"],
+            )
+        except Exception as e:
+            raise RuntimeError(f"Lỗi khởi tạo phiên làm việc ONNX: {e}") from e
+            
         self.input_name = self.session.get_inputs()[0].name
         self.backend_name = "ONNX-CPU"
 
@@ -81,85 +113,101 @@ class _OnnxBackend:
 
 
 # =====================================================================
-# ET-SSL Inference Engine (public interface)
+# Cỗ máy suy luận chính (ET-SSL Inference Engine)
 # =====================================================================
 class ETSSLInference:
     """
-    Inference engine cho ET-SSL anomaly detection.
+    Cỗ máy suy luận cho bài toán phát hiện bất thường ET-SSL.
 
-    Anomaly score: S(x) = ||f_θ(x_scaled) - μ_norm||²
-    Detection: anomaly nếu S(x) > δ
-
-    Usage:
-        engine = ETSSLInference(model_dir="path/to/model", backend="onnx")
-        result = engine.predict(feature_vector)
-        print(result["is_anomaly"], result["score"])
+    Công thức điểm số: S(x) = ||f_θ(x_scaled) - μ_norm||²
+    Điều kiện phân loại: Bất thường nếu S(x) > δ
     """
 
     BACKENDS = ("fp32", "int8", "onnx")
 
     def __init__(
         self,
-        model_dir: str,
+        model_dir: str | Path,
         backend: Literal["fp32", "int8", "onnx"] = "onnx",
         delta_override: Optional[float] = None,
     ):
         """
+        Khởi tạo cỗ máy suy luận.
+
         Args:
-            model_dir: Thư mục chứa model artifacts (encoder*.pt, mu_norm.npy, ...)
-            backend: "fp32" | "int8" | "onnx" — backend inference
-            delta_override: Ghi đè ngưỡng δ (dùng khi tinh chỉnh trên val set)
+            model_dir: Đường dẫn thư mục chứa cấu trúc mô hình.
+            backend: Tên backend suy luận.
+            delta_override: Ghi đè giá trị ngưỡng phát hiện (nếu có).
         """
         self.model_dir = Path(model_dir)
         self._validate_dir()
 
-        # Load config
-        with open(self.model_dir / "config.json", "r", encoding="utf-8") as f:
-            self.config = json.load(f)
-        self.input_dim = self.config["input_dim"]
-        self.embed_dim = self.config["embed_dim"]
+        # Nạp cấu hình kiến trúc
+        config_path = self.model_dir / "config.json"
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                self.config = json.load(f)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Tệp config.json bị lỗi định dạng: {e}") from e
 
-        # Load μ_norm (tâm cụm bình thường)
-        self.mu_norm = np.load(self.model_dir / "mu_norm.npy")  # (embed_dim,)
+        self.input_dim = self.config.get("input_dim")
+        self.embed_dim = self.config.get("embed_dim")
+        if not isinstance(self.input_dim, int) or self.input_dim <= 0:
+            raise ValueError(f"Tham số input_dim không hợp lệ: {self.input_dim}")
+        if not isinstance(self.embed_dim, int) or self.embed_dim <= 0:
+            raise ValueError(f"Tham số embed_dim không hợp lệ: {self.embed_dim}")
 
-        # Load δ (ngưỡng anomaly)
-        delta_raw = np.load(self.model_dir / "delta.npy")
+        # Nạp vector tâm cụm bình thường
+        try:
+            self.mu_norm = np.load(self.model_dir / "mu_norm.npy")
+        except Exception as e:
+            raise RuntimeError(f"Lỗi khi đọc mu_norm.npy: {e}") from e
+
+        # Nạp ngưỡng phát hiện
+        try:
+            delta_raw = np.load(self.model_dir / "delta.npy")
+        except Exception as e:
+            raise RuntimeError(f"Lỗi khi đọc delta.npy: {e}") from e
+            
         self.delta = float(delta_override or delta_raw.flat[0])
 
-        # Load scaler (nếu có)
+        # Nạp công cụ chuẩn hóa dữ liệu
         scaler_path = self.model_dir / "scaler.pkl"
-        self.scaler = joblib.load(scaler_path) if scaler_path.exists() else None
-        if self.scaler is None:
+        if scaler_path.exists():
+            try:
+                self.scaler = joblib.load(scaler_path)
+            except Exception as e:
+                raise RuntimeError(f"Lỗi nạp tệp scaler.pkl: {e}") from e
+        else:
+            self.scaler = None
             logger.warning(
-                "scaler.pkl not found in model_dir. "
-                "Feature input sẽ được dùng trực tiếp (không scale). "
-                "Hãy chắc chắn input đã được chuẩn hóa bên ngoài."
+                "Không tìm thấy scaler.pkl. Đặc trưng sẽ được dùng trực tiếp. "
+                "Cảnh báo: Hãy đảm bảo dữ liệu đầu vào đã được chuẩn hóa!"
             )
 
-        # Khởi tạo backend
-        self.backend = self._init_backend(backend)
+        self.backend: InferenceBackend = self._init_backend(backend)
         logger.info(
-            f"ETSSLInference ready | backend={self.backend.backend_name} "
-            f"| δ={self.delta:.4f} | input_dim={self.input_dim}"
+            "Cỗ máy ETSSLInference sẵn sàng | backend=%s | δ=%.4f | input_dim=%d",
+            self.backend.backend_name, self.delta, self.input_dim
         )
 
     # ------------------------------------------------------------------
-    # Public API
+    # Giao tiếp Công khai
     # ------------------------------------------------------------------
-    def predict(self, x: np.ndarray) -> dict:
+    def predict(self, x: np.ndarray) -> Dict[str, Any]:
         """
-        Predict anomaly score cho 1 sample.
+        Tính toán điểm số bất thường cho một vector mẫu.
 
         Args:
-            x: (input_dim,) raw feature vector (sẽ được scale tự động nếu có scaler)
+            x: Vector đặc trưng nguyên bản, shape (input_dim,).
 
         Returns:
-            dict với keys: score, is_anomaly, embedding, latency_ms
+            Từ điển kết quả bao gồm: score, is_anomaly, embedding, latency_ms.
         """
         t0 = time.perf_counter()
 
-        x_scaled = self._scale(x.reshape(1, -1))                  # (1, input_dim)
-        z = self.backend.predict_batch(x_scaled)                    # (1, embed_dim)
+        x_scaled = self._scale(x.reshape(1, -1))
+        z = self.backend.predict_batch(x_scaled)
         score = float(np.sum((z[0] - self.mu_norm) ** 2))
 
         latency_ms = (time.perf_counter() - t0) * 1000
@@ -171,22 +219,22 @@ class ETSSLInference:
             "latency_ms": latency_ms,
         }
 
-    def predict_batch(self, X: np.ndarray) -> list[dict]:
+    def predict_batch(self, X: np.ndarray) -> List[Dict[str, Any]]:
         """
-        Predict cho nhiều sample.
+        Tính toán cho nhiều vector song song.
 
         Args:
-            X: (N, input_dim) numpy array
+            X: Mảng đặc trưng 2D, shape (N, input_dim).
 
         Returns:
-            List[dict] — mỗi phần tử giống output của predict()
+            Danh sách từ điển kết quả.
         """
         t0 = time.perf_counter()
 
         X_scaled = self._scale(X)
-        Z = self.backend.predict_batch(X_scaled)                   # (N, embed_dim)
-        diff = Z - self.mu_norm[np.newaxis, :]                     # (N, embed_dim)
-        scores = np.sum(diff ** 2, axis=1)                         # (N,)
+        Z = self.backend.predict_batch(X_scaled)
+        diff = Z - self.mu_norm[np.newaxis, :]
+        scores = np.sum(diff ** 2, axis=1)
 
         total_ms = (time.perf_counter() - t0) * 1000
         per_ms = total_ms / len(X)
@@ -202,112 +250,115 @@ class ETSSLInference:
         ]
 
     def update_mu_norm(self, new_mu: np.ndarray) -> None:
-        """Cập nhật tâm cụm normal (dùng trong incremental learning)."""
-        assert new_mu.shape == self.mu_norm.shape, (
-            f"Shape mismatch: {new_mu.shape} vs {self.mu_norm.shape}"
-        )
+        """Cập nhật tâm cụm bình thường từ bộ học gia tăng."""
+        if new_mu.shape != self.mu_norm.shape:
+            raise ValueError(f"Khác biệt chiều: {new_mu.shape} so với {self.mu_norm.shape}")
         self.mu_norm = new_mu.copy()
 
     def update_delta(self, new_delta: float) -> None:
-        """Cập nhật ngưỡng anomaly."""
+        """Cập nhật linh hoạt ngưỡng phát hiện."""
         self.delta = float(new_delta)
-        logger.info(f"Delta updated: {self.delta:.4f}")
+        logger.info("Đã cập nhật ngưỡng Delta: %.4f", self.delta)
 
     # ------------------------------------------------------------------
-    # Private helpers
+    # Công cụ Nội bộ
     # ------------------------------------------------------------------
-    def _validate_dir(self):
+    def _validate_dir(self) -> None:
+        """Kiểm tra sự tồn tại của tập tin cốt lõi."""
         required = ["config.json", "mu_norm.npy", "delta.npy"]
         missing = [f for f in required if not (self.model_dir / f).exists()]
         if missing:
-            raise FileNotFoundError(
-                f"Missing files in {self.model_dir}: {missing}"
-            )
+            raise FileNotFoundError(f"Thư mục mô hình thiếu các tệp thiết yếu: {missing}")
 
-    def _init_backend(self, backend: str):
+    def _init_backend(self, backend: str) -> InferenceBackend:
+        """Khởi tạo mô-đun thực thi theo Strategy Pattern."""
         if backend == "fp32":
             return _TorchBackend(self.model_dir, use_int8=False)
         elif backend == "int8":
             return _TorchBackend(self.model_dir, use_int8=True)
         elif backend == "onnx":
             try:
+                import onnxruntime  # noqa
                 return _OnnxBackend(self.model_dir)
             except ImportError:
-                logger.warning("onnxruntime not installed, falling back to fp32")
+                logger.warning("Thư viện onnxruntime chưa được cài đặt. Hệ thống dự phòng sang fp32.")
                 return _TorchBackend(self.model_dir, use_int8=False)
         else:
-            raise ValueError(f"Unknown backend: {backend}. Choose: {self.BACKENDS}")
+            raise ValueError(f"Backend không được hỗ trợ: {backend}. Các lựa chọn khả dụng: {self.BACKENDS}")
 
     def _scale(self, X: np.ndarray) -> np.ndarray:
-        """Scale feature nếu có scaler."""
+        """Thực thi chuẩn hóa đặc trưng."""
         if self.scaler is not None:
             return self.scaler.transform(X).astype(np.float32)
         return X.astype(np.float32)
 
     # ------------------------------------------------------------------
-    # Benchmark
+    # Đo lường Hiệu năng
     # ------------------------------------------------------------------
-    def benchmark(self, n_runs: int = 500, batch_size: int = 1) -> dict:
-        """Đo latency và throughput."""
+    def benchmark(self, n_runs: int = 500, batch_size: int = 1) -> Dict[str, Any]:
+        """Đo lường độ trễ (latency) và băng thông (throughput) của engine."""
         rng = np.random.default_rng(42)
         test_X = rng.standard_normal((max(n_runs, batch_size), self.input_dim)) * 0.5
 
-        # Warmup
-        for i in range(min(20, n_runs)):
+        self._run_warmup(test_X, min(20, n_runs))
+        return self._measure_latency(test_X, n_runs)
+
+    def _run_warmup(self, test_X: np.ndarray, n_warmup: int) -> None:
+        """Khởi động bộ nhớ đệm và tối ưu trình biên dịch."""
+        for i in range(n_warmup):
             self.predict(test_X[i])
 
-        # Measure
+    def _measure_latency(self, test_X: np.ndarray, n_runs: int) -> Dict[str, Any]:
+        """Tiến hành vòng lặp đo lường tốc độ xử lý."""
         times = []
         for i in range(n_runs):
             t0 = time.perf_counter()
             self.predict(test_X[i % len(test_X)])
             times.append((time.perf_counter() - t0) * 1000)
 
-        times = np.array(times)
+        times_arr = np.array(times)
         return {
             "backend": self.backend.backend_name,
             "n_runs": n_runs,
-            "mean_ms": float(np.mean(times)),
-            "median_ms": float(np.median(times)),
-            "p95_ms": float(np.percentile(times, 95)),
-            "p99_ms": float(np.percentile(times, 99)),
-            "throughput_fps": float(1000 / np.mean(times)),
+            "mean_ms": float(np.mean(times_arr)),
+            "median_ms": float(np.median(times_arr)),
+            "p95_ms": float(np.percentile(times_arr, 95)),
+            "p99_ms": float(np.percentile(times_arr, 99)),
+            "throughput_fps": float(1000 / np.mean(times_arr)),
         }
 
 
 # =====================================================================
-# CLI self-test
+# Mã Tự Kiểm Tra (CLI Self-Test)
 # =====================================================================
 if __name__ == "__main__":
     import sys
-    from pathlib import Path
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
     from configs.paths import get_model_dir
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    MODEL_DIR = str(get_model_dir())
+    model_dir = get_model_dir()
+    logger.info("🧪 Khởi động bài tự kiểm tra ETSSLInference...")
 
-    print("=" * 60)
-    print("🧪 ETSSLInference Self-Test")
-    print("=" * 60)
-
-    for backend in ["fp32", "onnx"]:
-        print(f"\n📦 Backend: {backend.upper()}")
+    for be in ["fp32", "onnx"]:
+        logger.info("📦 Thử nghiệm Backend: %s", be.upper())
         try:
-            engine = ETSSLInference(MODEL_DIR, backend=backend)
+            engine = ETSSLInference(model_dir, backend=be)
+            
+            x_test = np.random.randn(20).astype(np.float32) * 0.5
+            res = engine.predict(x_test)
+            logger.info(
+                "  Dự đoán mẫu: score=%.4f | anomaly=%s | trễ=%.3fms",
+                res["score"], res["is_anomaly"], res["latency_ms"]
+            )
 
-            # Single predict
-            x = np.random.randn(20).astype(np.float32) * 0.5
-            res = engine.predict(x)
-            print(f"  score={res['score']:.4f} | anomaly={res['is_anomaly']} | {res['latency_ms']:.3f}ms")
-
-            # Benchmark
             bm = engine.benchmark(n_runs=200)
-            print(f"  mean={bm['mean_ms']:.3f}ms | p95={bm['p95_ms']:.3f}ms | {bm['throughput_fps']:.1f} fps")
+            logger.info(
+                "  Hiệu suất: trung bình=%.3fms | p95=%.3fms | băng thông=%.1f fps",
+                bm["mean_ms"], bm["p95_ms"], bm["throughput_fps"]
+            )
 
-        except Exception as e:
-            print(f"  ⚠️ {e}")
+        except Exception as err:
+            logger.error("⚠️ Sự cố xảy ra với backend %s: %s", be, err)
 
-    print("\n✅ Inference module test done")
+    logger.info("✅ Hoàn tất kiểm tra mô-đun suy luận.")
