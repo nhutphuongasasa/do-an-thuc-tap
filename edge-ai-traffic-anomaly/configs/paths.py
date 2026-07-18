@@ -1,4 +1,4 @@
-"""Central path helpers — đọc model_dir từ configs/config.yaml."""
+"""Central path helpers — reads model_dir from configs/config.yaml."""
 
 from functools import lru_cache
 from pathlib import Path
@@ -16,7 +16,7 @@ def load_config() -> dict:
 
 
 def get_model_dir() -> Path:
-    """Thư mục chứa encoder, mu_norm, delta, scaler, ..."""
+    """Directory containing encoder, mu_norm, delta, scaler, ..."""
     model_dir = load_config()["model"]["model_dir"]
     path = Path(model_dir)
     if not path.is_absolute():

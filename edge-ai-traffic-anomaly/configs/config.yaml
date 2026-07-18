@@ -1,10 +1,10 @@
 # =====================================================================
-# ET-SSL Edge AI Traffic Anomaly Detection — Config Trung Tâm
-# Tham chiếu: Sattar et al., Scientific Reports 2025
+# ET-SSL Edge AI Traffic Anomaly Detection — Central Config
+# Reference: Sattar et al., Scientific Reports 2025
 # DOI: 10.1038/s41598-025-08568-0
 # =====================================================================
 
-# ---- Đường dẫn model artifacts ----
+# ---- Model artifacts paths ----
 model:
   model_dir: "model/weights"
   encoder_fp32: "encoder_fp32.pt"
@@ -13,37 +13,37 @@ model:
   mu_norm: "mu_norm.npy"
   delta_file: "delta.npy"
   config_file: "config.json"
-  scaler: "scaler.pkl"          # sẽ tạo khi có data; nếu thiếu thì tạo mới từ data
+  scaler: "scaler.pkl"          # Created when data is available; if missing, created from data
 
-  # Kiến trúc encoder (phải khớp với model đã train)
+  # Encoder architecture (must match trained model)
   input_dim: 20
   hidden_dim: 256
   embed_dim: 64
   dropout: 0.2
 
-# ---- Tham số anomaly detection ----
+# ---- Anomaly detection parameters ----
 detection:
-  delta: 105.68504333496094   # ngưỡng anomaly (từ training); sẽ tinh chỉnh lại sau
-  kappa: 1.0                  # hệ số nhạy κ — đặt 1.0 để delta thực tế = delta.npy; chỉ tăng sau khi recalibrate xong
+  delta: 105.68504333496094   # Anomaly threshold (from training); will be fine-tuned later
+  kappa: 1.0                  # Sensitivity coefficient κ — set to 1.0 so effective delta = delta.npy; only increase after recalibration
   # score > delta → anomaly
 
 # ---- Incremental learning ----
 incremental:
-  alpha: 0.99                 # decay factor α: μ^(t+1) = α·μ^(t) + (1-α)·mean(z_normal)
-  update_interval: 100        # cập nhật μ_norm sau mỗi N flow confirmed normal
-  min_normal_batch: 10        # số flow normal tối thiểu để trigger update
-  rollback_window: 10         # số checkpoint μ_norm lưu lại để rollback
-  drift_rollback_threshold: 5.0  # rollback tự động nếu |Δμ| vượt ngưỡng
+  alpha: 0.99                 # Decay factor α: μ^(t+1) = α·μ^(t) + (1-α)·mean(z_normal)
+  update_interval: 100        # Update μ_norm after every N confirmed normal flows
+  min_normal_batch: 10        # Minimum normal flows to trigger update
+  rollback_window: 10         # Number of μ_norm checkpoints to keep for rollback
+  drift_rollback_threshold: 5.0  # Automatic rollback if |Δμ| exceeds threshold
 
 # ---- Pipeline parameters ----
 pipeline:
-  time_window_sec: null       # TẮT time_window — dùng flow_timeout_sec để emit; tránh flow bị cắt giữa chừng emit nhiều lần
-  flow_timeout_sec: 120       # flow timeout nếu không có packet mới (120s để tránh phân mảnh kết nối HTTPS long-lived)
-  max_queue_size: 1000        # số flow tối đa trong hàng đợi inference
-  batch_size: 32              # batch inference size
-  webhook_url: null           # URL webhook alert (null = tắt)
+  time_window_sec: null       # OFF — use flow_timeout_sec to emit; prevents flow fragmentation
+  flow_timeout_sec: 120       # Flow timeout if no new packets (120s to avoid fragmenting long-lived HTTPS)
+  max_queue_size: 1000        # Max flows in inference queue
+  batch_size: 32              # Inference batch size
+  webhook_url: null           # Webhook URL for alerts (null = disabled)
 
-# ---- Feature schema (theo thứ tự model expect) ----
+# ---- Feature schema (in the order expected by the model) ----
 features:
   names:
     - median_packets_delta_time
@@ -71,7 +71,7 @@ features:
 data:
   raw_dir: "data/raw"
   processed_dir: "data/processed"
-  # Mapping tên dataset → thư mục con
+  # Dataset name mapping to subdirectories
   datasets:
     unsw_nb15:
       dir: "data/raw/unsw-nb15"
@@ -92,13 +92,13 @@ benchmark:
   n_warmup: 20
   n_runs: 1000
   batch_sizes: [1, 8, 32, 64, 128]
-  cpu_limit_cores: null        # null = dùng tất cả; set số int để giả lập edge (vd: 2)
+  cpu_limit_cores: null        # null = use all; set integer to simulate edge (e.g., 2)
 
-# ---- Logging và output file ----
+# ---- Logging and output files ----
 logging:
   log_dir: "logs"
   level: "INFO"                # DEBUG | INFO | WARNING
   mu_norm_log: "logs/mu_norm_history.npy"
-  # Alert output (dùng trong AlertManager)
-  alert_log_path: "logs/alerts.jsonl"        # append từng dòng JSON khi có anomaly
-  alert_summary_path: "logs/alerts_summary.json"  # snapshot tổng hợp, load bằng json.load()
+  # Alert output (used in AlertManager)
+  alert_log_path: "logs/alerts.jsonl"             # Append each JSON line on anomaly
+  alert_summary_path: "logs/alerts_summary.json"  # Aggregate snapshot, loaded via json.load()
