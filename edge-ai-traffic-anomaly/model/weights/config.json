@@ -2,7 +2,7 @@
   "input_dim": 20,
   "embed_dim": 64,
   "hidden_dim": 256,
-  "delta": 105.68504333496094,
+  "delta": 1505.797607421875,
   "model_version": "v5",
   "feature_names": [
     "median_packets_delta_time",

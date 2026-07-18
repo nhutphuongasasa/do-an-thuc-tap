@@ -22,9 +22,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from model.inference import ETSSLInference
 from evaluation.metrics import compute_binary_metrics, compute_auc_roc, print_metrics_table
 
-MODEL_DIR = str(
-    Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-)
+from configs.paths import get_model_dir
+
+MODEL_DIR = str(get_model_dir())
 
 
 def generate_zero_day_patterns(n_each: int = 200, input_dim: int = 20) -> dict:

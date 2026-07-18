@@ -1,0 +1,57 @@
+{
+  "baseline": {
+    "accuracy": 0.2,
+    "precision": 0.2,
+    "recall": 1.0,
+    "fpr": 1.0,
+    "f1": 0.3333,
+    "tp": 120,
+    "tn": 0,
+    "fp": 480,
+    "fn": 0
+  },
+  "padding": {
+    "accuracy": 0.2,
+    "precision": 0.2,
+    "recall": 1.0,
+    "fpr": 1.0,
+    "f1": 0.3333,
+    "tp": 120,
+    "tn": 0,
+    "fp": 480,
+    "fn": 0
+  },
+  "timing_random": {
+    "accuracy": 0.2,
+    "precision": 0.2,
+    "recall": 1.0,
+    "fpr": 1.0,
+    "f1": 0.3333,
+    "tp": 120,
+    "tn": 0,
+    "fp": 480,
+    "fn": 0
+  },
+  "volume_shift": {
+    "accuracy": 0.2017,
+    "precision": 0.2003,
+    "recall": 1.0,
+    "fpr": 0.9979,
+    "f1": 0.3338,
+    "tp": 120,
+    "tn": 1,
+    "fp": 479,
+    "fn": 0
+  },
+  "combined": {
+    "accuracy": 0.2,
+    "precision": 0.2,
+    "recall": 1.0,
+    "fpr": 1.0,
+    "f1": 0.3333,
+    "tp": 120,
+    "tn": 0,
+    "fp": 480,
+    "fn": 0
+  }
+}

@@ -282,11 +282,12 @@ if __name__ == "__main__":
     import sys
     from pathlib import Path
 
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from configs.paths import get_model_dir
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    MODEL_DIR = str(
-        Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-    )
+    MODEL_DIR = str(get_model_dir())
 
     print("=" * 60)
     print("🧪 ETSSLInference Self-Test")

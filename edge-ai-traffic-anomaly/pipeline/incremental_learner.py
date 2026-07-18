@@ -360,9 +360,9 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    MODEL_DIR = str(
-        Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-    )
+    from configs.paths import get_model_dir
+
+    MODEL_DIR = str(get_model_dir())
 
     # Load initial μ_norm
     mu_path = Path(MODEL_DIR) / "mu_norm.npy"

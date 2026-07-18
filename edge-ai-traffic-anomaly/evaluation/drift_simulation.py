@@ -21,9 +21,9 @@ from model.inference import ETSSLInference
 from pipeline.incremental_learner import IncrementalLearner, simulate_drift
 from evaluation.metrics import compute_binary_metrics
 
-MODEL_DIR = str(
-    Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-)
+from configs.paths import get_model_dir
+
+MODEL_DIR = str(get_model_dir())
 
 
 def run_drift_simulation(

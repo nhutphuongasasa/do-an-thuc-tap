@@ -229,8 +229,9 @@ def split_and_save(
 
     # Copy scaler vào model dir để inference dùng được
     if save_scaler_to_model:
-        model_dir = Path(__file__).parent.parent / \
-            "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
+        from configs.paths import get_model_dir
+
+        model_dir = get_model_dir()
         if model_dir.exists():
             import shutil
             dest = model_dir / "scaler.pkl"

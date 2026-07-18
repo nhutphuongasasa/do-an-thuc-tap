@@ -6,7 +6,9 @@ ENV/
 __pycache__/
 *.pyc
 *.pyo
-*.pkl  
+*.pkl
+!edge-ai-traffic-anomaly/model/weights/*.pkl
 darktrace-nids
 
 venv
+**/__pycache__/

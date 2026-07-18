@@ -19,9 +19,9 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from model.inference import ETSSLInference
 
-MODEL_DIR = str(
-    Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-)
+from configs.paths import get_model_dir
+
+MODEL_DIR = str(get_model_dir())
 PROCESSED_DIR = Path(__file__).parent.parent / "data/processed"
 
 

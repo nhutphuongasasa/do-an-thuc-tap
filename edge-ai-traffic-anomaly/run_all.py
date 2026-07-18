@@ -140,6 +140,34 @@ def run_pipeline(dataset: str = "synthetic", quick: bool = False):
         print(f"  ❌ Drift simulation failed: {e}")
 
     # ----------------------------------------------------------------
+    # Step 8: Robustness / evasion (readme Bảng 12)
+    # ----------------------------------------------------------------
+    print("\n" + "─"*60)
+    print("STEP 8: Robustness / Evasion Test")
+    print("─"*60)
+    try:
+        from evaluation.robustness_test import run_robustness_test
+        robust = run_robustness_test(dataset_name=dataset, backend="onnx", n_samples=300 if quick else 500)
+        all_results["robustness"] = robust
+        print("  ✅ Robustness test complete")
+    except Exception as e:
+        print(f"  ❌ Robustness test failed: {e}")
+
+    # ----------------------------------------------------------------
+    # Step 9: Privacy validation (readme §9)
+    # ----------------------------------------------------------------
+    print("\n" + "─"*60)
+    print("STEP 9: Privacy Validation")
+    print("─"*60)
+    try:
+        from evaluation.privacy_audit import run_privacy_audit
+        privacy = run_privacy_audit(verbose=True)
+        all_results["privacy_audit"] = privacy
+        print("  ✅ Privacy audit complete" if privacy["passed"] else "  ⚠️ Privacy audit có cảnh báo")
+    except Exception as e:
+        print(f"  ❌ Privacy audit failed: {e}")
+
+    # ----------------------------------------------------------------
     # Final summary
     # ----------------------------------------------------------------
     elapsed = time.time() - t_start

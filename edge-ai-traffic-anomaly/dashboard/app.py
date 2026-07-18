@@ -11,6 +11,7 @@ Chạy: streamlit run dashboard/app.py
 """
 
 import sys
+import os
 import time
 import json
 import threading
@@ -21,6 +22,17 @@ import numpy as np
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from configs.paths import get_model_dir, load_config
+from pipeline.alert_manager import AlertManager
+from pipeline.demo_stream import _make_flow
+from pipeline.inference_runner import PipelineInferenceRunner
+from pipeline.shared_state import load_pipeline_state
+
+MODEL_DIR = str(get_model_dir())
+CFG = load_config()
+STATE_PATH = Path(CFG["logging"]["log_dir"]) / "pipeline_state.json"
+ALERT_PATH = Path(CFG["dashboard"]["alert_log_path"])
 
 # =====================================================================
 # Page config
@@ -147,6 +159,19 @@ st.markdown("""
 # =====================================================================
 # State initialization
 # =====================================================================
+def _default_pipeline_mode() -> str:
+    """Live Feed khi start.sh chạy demo/capture nền; Integrated khi chạy dashboard đơn."""
+    if os.environ.get("ET_SSL_LIVE_FEED") == "1":
+        return "live_feed"
+    cfg = load_config()
+    state_path = Path(cfg["logging"]["log_dir"]) / "pipeline_state.json"
+    if state_path.exists():
+        age = time.time() - state_path.stat().st_mtime
+        if age < 120:
+            return "live_feed"
+    return "integrated"
+
+
 def init_state():
     defaults = {
         "running": False,
@@ -160,7 +185,9 @@ def init_state():
         "delta": 105.68,
         "alpha": 0.99,
         "mu_drift_history": deque(maxlen=100),
-        "demo_mode": True,
+        "runner": None,
+        "pipeline_mode": _default_pipeline_mode(),
+        "mu_updates": 0,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -183,9 +210,7 @@ def load_engine(model_dir, backend="onnx"):
         return None, str(e)
 
 
-MODEL_DIR = str(
-    Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-)
+# Sidebar uses MODEL_DIR, CFG, STATE_PATH, ALERT_PATH from module top
 
 # =====================================================================
 # Sidebar
@@ -194,9 +219,26 @@ with st.sidebar:
     st.markdown("## ⚙️ Configuration")
 
     st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+    st.markdown("**Pipeline Mode**")
+    pipeline_mode = st.radio(
+        "Nguồn traffic",
+        ["integrated", "live_feed"],
+        format_func=lambda x: "Integrated Pipeline" if x == "integrated" else "Live Feed (capture/demo)",
+        index=0 if st.session_state.pipeline_mode == "integrated" else 1,
+        help="Integrated: chạy full pipeline trong dashboard. Live Feed: đọc logs/pipeline_state.json",
+    )
+    st.session_state.pipeline_mode = pipeline_mode
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+    st.markdown("**Detection**")
     backend = st.selectbox("Inference Backend", ["onnx", "fp32", "int8"], index=0)
-    delta = st.slider("Anomaly Threshold δ", 10.0, 500.0, st.session_state.delta, 5.0)
+    kappa = st.slider("Sensitivity κ", 0.5, 3.0, float(CFG["detection"]["kappa"]), 0.1,
+                      help="Ngưỡng thực = δ × κ")
+    delta = st.slider("Base Threshold δ", 10.0, 500.0, st.session_state.delta, 5.0)
     st.session_state.delta = delta
+    effective_delta = delta * kappa
+    st.caption(f"Effective threshold: **{effective_delta:.1f}** (= δ × κ)")
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
@@ -208,9 +250,7 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-    st.markdown("**Demo Settings**")
-    demo_mode = st.checkbox("Demo Mode (synthetic data)", value=True,
-                            help="Tạo traffic ngẫu nhiên để demo")
+    st.markdown("**Traffic Simulation**")
     anomaly_inject = st.slider("Anomaly injection rate (%)", 0, 50, 15)
     sim_speed = st.slider("Simulation speed (flows/sec)", 1, 20, 5)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -260,11 +300,28 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# Load model
+# Load pipeline runner (integrated mode)
 # =====================================================================
-engine, err = load_engine(MODEL_DIR, backend)
-if engine:
-    engine.update_delta(delta)
+def get_runner(backend_name: str):
+    if st.session_state.runner is None:
+        runner = PipelineInferenceRunner.from_config(MODEL_DIR, backend=backend_name)
+        st.session_state.runner = runner
+    return st.session_state.runner
+
+
+runner = None
+if st.session_state.pipeline_mode == "integrated":
+    runner = get_runner(backend)
+    runner.engine.update_delta(delta)
+    runner.kappa = kappa
+    runner.learner.alpha = alpha
+    runner.learner.update_interval = update_interval
+    engine = runner.engine
+    err = None
+else:
+    engine, err = load_engine(MODEL_DIR, backend)
+    if engine:
+        engine.update_delta(delta * kappa)
 
 # =====================================================================
 # KPI Metrics Row
@@ -277,6 +334,7 @@ anomaly_rate = (anomalies / flows * 100) if flows > 0 else 0.0
 scores_arr = np.array(list(st.session_state.scores)) if st.session_state.scores else np.array([])
 avg_score = float(scores_arr.mean()) if len(scores_arr) > 0 else 0.0
 max_score = float(scores_arr.max()) if len(scores_arr) > 0 else 0.0
+threshold = delta * kappa
 
 kpi_cols = st.columns(5)
 kpis = [
@@ -284,7 +342,7 @@ kpis = [
     ("🚨 Anomalies", f"{anomalies:,}", "#EF5350"),
     ("📈 Anomaly Rate", f"{anomaly_rate:.1f}%", "#FFA726"),
     ("⚡ Avg Score", f"{avg_score:.1f}", "#AB47BC"),
-    ("🔺 Max Score", f"{max_score:.1f}", "#EF5350" if max_score > delta else "#66BB6A"),
+    ("🔺 Max Score", f"{max_score:.1f}", "#EF5350" if max_score > threshold else "#66BB6A"),
 ]
 
 for col, (label, val, color) in zip(kpi_cols, kpis):
@@ -329,14 +387,36 @@ with inc_col1:
         st.info("μ_norm drift log sẽ hiện ở đây khi model bắt đầu học")
 
 with inc_col2:
-    st.markdown("### 📋 Model Config")
-    if engine:
+    st.markdown("### 📋 Pipeline Status")
+    if runner and runner.learner:
+        stats = runner.learner.stats
+        st.json({
+            "mode": st.session_state.pipeline_mode,
+            "backend": backend,
+            "delta (δ)": round(delta, 2),
+            "kappa (κ)": kappa,
+            "effective δ": round(delta * kappa, 2),
+            "μ updates": stats["total_updates"],
+            "normal seen": stats["total_normal_seen"],
+            "anomaly seen": stats["total_anomaly_seen"],
+            "buffer": stats["buffer_size"],
+            "scaler": "✅" if runner.engine.scaler else "⚠️ Missing",
+        })
+    elif st.session_state.pipeline_mode == "live_feed":
+        state = load_pipeline_state(STATE_PATH)
+        st.json({
+            "mode": "live_feed",
+            "total_flows": state.get("total_flows", 0),
+            "anomalies": state.get("total_anomalies", 0),
+            "μ updates": state.get("mu_updates", 0),
+            "last μ drift": state.get("last_mu_drift", 0),
+        })
+    elif engine:
         st.json({
             "backend": backend,
             "delta (δ)": round(engine.delta, 2),
             "embed_dim": engine.embed_dim,
             "input_dim": engine.input_dim,
-            "scaler": "✅" if engine.scaler else "⚠️ Missing",
         })
 
 with inc_col3:
@@ -353,130 +433,135 @@ with inc_col3:
     st.caption("Sattar et al., *Scientific Reports* 2025")
 
 # =====================================================================
-# Simulation loop
+# Pipeline loop — Integrated or Live Feed
 # =====================================================================
-def _generate_demo_flow(anomaly_ratio: float, rng):
-    """Generate 1 synthetic flow feature vector."""
-    is_anom = rng.random() < (anomaly_ratio / 100)
-    if is_anom:
-        x = rng.normal(3.0, 1.5, 20).astype(np.float32)
-    else:
-        x = rng.normal(0.0, 1.0, 20).astype(np.float32)
-    return x, is_anom
+def _sync_ui_from_state(state: dict):
+    """Đồng bộ UI từ pipeline_state.json (live feed mode)."""
+    if not state:
+        return
+    st.session_state.total_flows = state.get("total_flows", 0)
+    st.session_state.total_anomalies = state.get("total_anomalies", 0)
+    st.session_state.mu_updates = state.get("mu_updates", 0)
+    st.session_state.scores = deque(state.get("scores", []), maxlen=200)
+    st.session_state.is_anomaly = deque(state.get("is_anomaly", []), maxlen=200)
+    st.session_state.timestamps = deque(state.get("timestamps", []), maxlen=200)
+    hist = state.get("mu_drift_history", [])
+    st.session_state.mu_drift_history = deque(hist, maxlen=100)
 
 
-if st.session_state.running:
-    rng = np.random.default_rng()
+def _render_charts(scores_list, anomaly_list, threshold):
+    import pandas as pd
+    import plotly.graph_objects as go
 
-    for _ in range(sim_speed):
-        x, ground_truth = _generate_demo_flow(anomaly_inject, rng)
+    if not scores_list:
+        return
 
-        if engine:
-            result = engine.predict(x)
-            score = result["score"]
-            pred_anomaly = result["is_anomaly"]
-        else:
-            # Fallback nếu không load được model
-            score = float(np.sum(x**2)) + rng.normal(0, 5)
-            pred_anomaly = score > delta
+    df = pd.DataFrame({"score": scores_list, "anomaly": anomaly_list})
+    fig = go.Figure()
+    colors = ["#EF5350" if a else "#42A5F5" for a in anomaly_list]
+    fig.add_trace(go.Scatter(
+        y=df["score"], mode="lines+markers", name="Anomaly Score",
+        line=dict(color="#42A5F5", width=1.5),
+        marker=dict(color=colors, size=5),
+    ))
+    fig.add_hline(y=threshold, line_dash="dash", line_color="#FF9800",
+                  annotation_text=f"δ×κ={threshold:.0f}", annotation_position="top right")
+    fig.update_layout(
+        paper_bgcolor="#0d1526", plot_bgcolor="#0d1526",
+        font=dict(color="#8899aa"), margin=dict(l=10, r=10, t=20, b=10),
+        height=200, xaxis=dict(gridcolor="#1e2840"), yaxis=dict(gridcolor="#1e2840", title="S(x)"),
+        showlegend=False,
+    )
+    score_placeholder.plotly_chart(fig, use_container_width=True)
 
-        ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-        st.session_state.scores.append(score)
-        st.session_state.is_anomaly.append(pred_anomaly)
-        st.session_state.timestamps.append(ts)
-        st.session_state.total_flows += 1
+    sc_arr = np.array(scores_list)
+    ia_arr = np.array(anomaly_list)
+    fig2 = go.Figure()
+    if (~ia_arr).any():
+        fig2.add_trace(go.Histogram(x=sc_arr[~ia_arr], name="Normal", marker_color="#42A5F5", opacity=0.7, nbinsx=30))
+    if ia_arr.any():
+        fig2.add_trace(go.Histogram(x=sc_arr[ia_arr], name="Anomaly", marker_color="#EF5350", opacity=0.7, nbinsx=30))
+    fig2.add_vline(x=threshold, line_dash="dash", line_color="#FF9800")
+    fig2.update_layout(
+        paper_bgcolor="#0d1526", plot_bgcolor="#0d1526",
+        font=dict(color="#8899aa"), barmode="overlay",
+        margin=dict(l=10, r=10, t=20, b=10), height=180,
+        xaxis=dict(gridcolor="#1e2840", title="Anomaly Score"),
+        yaxis=dict(gridcolor="#1e2840", title="Count"),
+    )
+    dist_placeholder.plotly_chart(fig2, use_container_width=True)
 
-        if pred_anomaly:
-            st.session_state.total_anomalies += 1
-            st.session_state.alerts.appendleft({
-                "ts": ts,
-                "score": score,
-                "delta": delta,
-            })
 
-    # Update charts
-    sc = list(st.session_state.scores)
-    ia = list(st.session_state.is_anomaly)
-
-    if sc:
-        import pandas as pd
-        import plotly.graph_objects as go
-
-        df = pd.DataFrame({
-            "score": sc,
-            "anomaly": ia,
-        })
-
-        # Score time series
-        fig = go.Figure()
-        colors = ["#EF5350" if a else "#42A5F5" for a in ia]
-        fig.add_trace(go.Scatter(
-            y=df["score"], mode="lines+markers",
-            name="Anomaly Score",
-            line=dict(color="#42A5F5", width=1.5),
-            marker=dict(color=colors, size=5),
-        ))
-        fig.add_hline(y=delta, line_dash="dash", line_color="#FF9800",
-                      annotation_text=f"δ={delta:.0f}", annotation_position="top right")
-        fig.update_layout(
-            paper_bgcolor="#0d1526", plot_bgcolor="#0d1526",
-            font=dict(color="#8899aa"),
-            margin=dict(l=10, r=10, t=20, b=10),
-            height=200,
-            xaxis=dict(gridcolor="#1e2840", title=""),
-            yaxis=dict(gridcolor="#1e2840", title="S(x)"),
-            showlegend=False,
-        )
-        score_placeholder.plotly_chart(fig, use_container_width=True)
-
-        # Distribution
-        sc_arr = np.array(sc)
-        ia_arr = np.array(ia)
-        fig2 = go.Figure()
-        if (ia_arr == False).any():
-            fig2.add_trace(go.Histogram(
-                x=sc_arr[ia_arr == False], name="Normal",
-                marker_color="#42A5F5", opacity=0.7,
-                nbinsx=30,
-            ))
-        if ia_arr.any():
-            fig2.add_trace(go.Histogram(
-                x=sc_arr[ia_arr], name="Anomaly",
-                marker_color="#EF5350", opacity=0.7,
-                nbinsx=30,
-            ))
-        fig2.add_vline(x=delta, line_dash="dash", line_color="#FF9800")
-        fig2.update_layout(
-            paper_bgcolor="#0d1526", plot_bgcolor="#0d1526",
-            font=dict(color="#8899aa"),
-            barmode="overlay",
-            margin=dict(l=10, r=10, t=20, b=10),
-            height=180,
-            xaxis=dict(gridcolor="#1e2840", title="Anomaly Score"),
-            yaxis=dict(gridcolor="#1e2840", title="Count"),
-        )
-        dist_placeholder.plotly_chart(fig2, use_container_width=True)
-
-    # Alert feed
-    alerts = list(st.session_state.alerts)
+def _render_alerts(alert_records, threshold):
     alert_html = ""
-    if alerts:
-        for a in alerts[:15]:
-            severity = "🔴" if a["score"] > delta * 2 else "🟠"
+    if alert_records:
+        for a in alert_records[:15]:
+            ts = a.get("ts") or a.get("timestamp", "")[:19]
+            score = a.get("score", 0)
+            severity = "🔴" if score > threshold * 2 else "🟠"
+            flow = a.get("flow_id", a.get("src", "?"))
             alert_html += f"""
             <div class="alert-item">
-                {severity} <b>{a['ts']}</b><br>
-                Score: <b>{a['score']:.1f}</b> (δ={a['delta']:.0f})
+                {severity} <b>{ts}</b><br>
+                {flow}<br>
+                Score: <b>{score:.1f}</b> (δ×κ={threshold:.0f})
                 <span class="badge-anomaly">ANOMALY</span>
             </div>
             """
     else:
         alert_html = "<div style='color:#8899aa; padding:20px; text-align:center;'>No alerts yet</div>"
-
     alert_placeholder.markdown(alert_html, unsafe_allow_html=True)
 
-    time.sleep(1.0 / max(sim_speed, 1))
-    st.rerun()
+
+if st.session_state.running:
+    if st.session_state.pipeline_mode == "live_feed":
+        state = load_pipeline_state(STATE_PATH)
+        _sync_ui_from_state(state)
+        alerts_mgr = AlertManager(log_path=ALERT_PATH)
+        alert_records = alerts_mgr.read_recent(15)
+        sc = list(st.session_state.scores)
+        ia = list(st.session_state.is_anomaly)
+        if sc:
+            _render_charts(sc, ia, threshold)
+        _render_alerts(alert_records, threshold)
+        time.sleep(CFG["dashboard"]["refresh_interval_sec"])
+        st.rerun()
+
+    elif runner:
+        rng = np.random.default_rng()
+        for i in range(sim_speed):
+            is_anom = rng.random() < (anomaly_inject / 100)
+            flow, features = _make_flow(st.session_state.total_flows + i, is_anom, rng)
+            result = runner.process_flow(flow, features)
+
+            ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+            score = result["score"]
+            pred_anomaly = result["is_anomaly"]
+
+            st.session_state.scores.append(score)
+            st.session_state.is_anomaly.append(pred_anomaly)
+            st.session_state.timestamps.append(ts)
+            st.session_state.total_flows += 1
+
+            if pred_anomaly:
+                st.session_state.total_anomalies += 1
+                st.session_state.alerts.appendleft({
+                    "ts": ts, "score": score, "delta": threshold,
+                    "flow_id": f"{flow.src_ip}:{flow.src_port}->{flow.dst_ip}:{flow.dst_port}",
+                })
+
+            if runner.learner and runner.learner.stats["total_updates"] > st.session_state.mu_updates:
+                st.session_state.mu_updates = runner.learner.stats["total_updates"]
+                hist = runner.state.mu_drift_history if runner.state else []
+                st.session_state.mu_drift_history = deque(hist, maxlen=100)
+
+        sc = list(st.session_state.scores)
+        ia = list(st.session_state.is_anomaly)
+        if sc:
+            _render_charts(sc, ia, threshold)
+        _render_alerts(list(st.session_state.alerts), threshold)
+        time.sleep(1.0 / max(sim_speed, 1))
+        st.rerun()
 
 elif not st.session_state.running:
     score_placeholder.info("▶ Nhấn **Start** để bắt đầu simulation")

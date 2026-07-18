@@ -142,7 +142,9 @@ if __name__ == "__main__":
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-    MODEL_DIR = Path("../../TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai")
+    from configs.paths import get_model_dir
+
+    MODEL_DIR = get_model_dir()
 
     print("🔧 Testing Encoder module...")
     enc = load_encoder(

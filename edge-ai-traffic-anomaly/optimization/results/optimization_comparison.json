@@ -2,45 +2,45 @@
   "models": {
     "fp32": {
       "size_kb": 456.4,
-      "mean_latency_ms": 0.41391099941392895,
-      "p95_latency_ms": 0.6716850002703721,
-      "throughput_fps": 2415.97831759952,
-      "accuracy": 0.994,
-      "precision": 1.0,
-      "recall": 0.9703,
-      "f1": 0.9849,
-      "fpr": 0.0,
-      "auc": 1.0
+      "mean_latency_ms": 0.33207431000846555,
+      "p95_latency_ms": 0.388857748657756,
+      "throughput_fps": 3011.3741709634423,
+      "accuracy": 0.463,
+      "precision": 0.2733,
+      "recall": 1.0,
+      "f1": 0.4293,
+      "fpr": 0.6729,
+      "auc": 0.9824
     },
     "int8": {
       "size_kb": 145.6,
-      "mean_latency_ms": 0.356657999654999,
-      "p95_latency_ms": 0.4207699948892696,
-      "throughput_fps": 2803.806450345474,
-      "accuracy": 0.87,
-      "precision": 1.0,
-      "recall": 0.3564,
-      "f1": 0.5255,
-      "fpr": 0.0,
-      "auc": 1.0
+      "mean_latency_ms": 0.3325006198792835,
+      "p95_latency_ms": 0.3878993006765086,
+      "throughput_fps": 3007.5131900898605,
+      "accuracy": 0.773,
+      "precision": 0.4709,
+      "recall": 1.0,
+      "f1": 0.6403,
+      "fpr": 0.2845,
+      "auc": 0.9986
     },
     "onnx": {
       "size_kb": 467.6,
-      "mean_latency_ms": 0.17835599959653337,
-      "p95_latency_ms": 0.19664499814098235,
-      "throughput_fps": 5606.764012773006,
-      "accuracy": 0.994,
-      "precision": 1.0,
-      "recall": 0.9703,
-      "f1": 0.9849,
-      "fpr": 0.0,
-      "auc": 1.0
+      "mean_latency_ms": 0.10961657006191672,
+      "p95_latency_ms": 0.1405608994900831,
+      "throughput_fps": 9122.70835910257,
+      "accuracy": 0.463,
+      "precision": 0.2733,
+      "recall": 1.0,
+      "f1": 0.4293,
+      "fpr": 0.6729,
+      "auc": 0.9824
     }
   },
   "embedding_drift_fp32_vs_int8": {
-    "mean_abs_diff": 0.668581,
-    "max_abs_diff": 8.243,
-    "mean_rel_diff_pct": 797.044
+    "mean_abs_diff": 0.676091,
+    "max_abs_diff": 10.430323,
+    "mean_rel_diff_pct": 619.903
   },
   "dataset": "synthetic"
 }

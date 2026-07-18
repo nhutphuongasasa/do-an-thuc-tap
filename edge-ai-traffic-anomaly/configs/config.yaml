@@ -6,7 +6,7 @@
 
 # ---- Đường dẫn model artifacts ----
 model:
-  model_dir: "../TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
+  model_dir: "model/weights"
   encoder_fp32: "encoder_fp32.pt"
   encoder_int8: "encoder_int8.pt"
   encoder_onnx: "encoder_v5.onnx"
@@ -24,7 +24,7 @@ model:
 # ---- Tham số anomaly detection ----
 detection:
   delta: 105.68504333496094   # ngưỡng anomaly (từ training); sẽ tinh chỉnh lại sau
-  kappa: 1.5                  # hệ số nhạy κ (bội số của delta khi auto-tune)
+  kappa: 1.0                  # hệ số nhạy κ — đặt 1.0 để delta thực tế = delta.npy; chỉ tăng sau khi recalibrate xong
   # score > delta → anomaly
 
 # ---- Incremental learning ----
@@ -33,13 +33,15 @@ incremental:
   update_interval: 100        # cập nhật μ_norm sau mỗi N flow confirmed normal
   min_normal_batch: 10        # số flow normal tối thiểu để trigger update
   rollback_window: 10         # số checkpoint μ_norm lưu lại để rollback
+  drift_rollback_threshold: 5.0  # rollback tự động nếu |Δμ| vượt ngưỡng
 
 # ---- Pipeline parameters ----
 pipeline:
-  time_window_sec: 60         # cửa sổ thời gian gom flow (giây)
-  flow_timeout_sec: 30        # flow timeout nếu không có packet mới
+  time_window_sec: null       # TẮT time_window — dùng flow_timeout_sec để emit; tránh flow bị cắt giữa chừng emit nhiều lần
+  flow_timeout_sec: 120       # flow timeout nếu không có packet mới (120s để tránh phân mảnh kết nối HTTPS long-lived)
   max_queue_size: 1000        # số flow tối đa trong hàng đợi inference
   batch_size: 32              # batch inference size
+  webhook_url: null           # URL webhook alert (null = tắt)
 
 # ---- Feature schema (theo thứ tự model expect) ----
 features:
@@ -92,16 +94,11 @@ benchmark:
   batch_sizes: [1, 8, 32, 64, 128]
   cpu_limit_cores: null        # null = dùng tất cả; set số int để giả lập edge (vd: 2)
 
-# ---- Dashboard ----
-dashboard:
-  host: "localhost"
-  port: 8501
-  refresh_interval_sec: 2
-  max_display_flows: 200       # số flow hiển thị trên chart
-  alert_log_path: "logs/alerts.jsonl"
-
-# ---- Logging ----
+# ---- Logging và output file ----
 logging:
   log_dir: "logs"
   level: "INFO"                # DEBUG | INFO | WARNING
   mu_norm_log: "logs/mu_norm_history.npy"
+  # Alert output (dùng trong AlertManager)
+  alert_log_path: "logs/alerts.jsonl"        # append từng dòng JSON khi có anomaly
+  alert_summary_path: "logs/alerts_summary.json"  # snapshot tổng hợp, load bằng json.load()

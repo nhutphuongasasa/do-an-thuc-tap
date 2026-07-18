@@ -24,9 +24,9 @@ from model.quantize import run_quantization
 from optimization.benchmark import benchmark_backend, ResourceMonitor
 from evaluation.metrics import compute_binary_metrics, compute_auc_roc
 
-MODEL_DIR = str(
-    Path(__file__).parent.parent.parent / "TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai"
-)
+from configs.paths import get_model_dir
+
+MODEL_DIR = str(get_model_dir())
 
 
 def compare_all(

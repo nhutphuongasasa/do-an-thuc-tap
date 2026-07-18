@@ -198,10 +198,12 @@ def run_quantization(model_dir: str, n_runs: int = 500) -> dict:
 
 
 if __name__ == "__main__":
+    from configs.paths import get_model_dir
+
     parser = argparse.ArgumentParser(description="Quantize ET-SSL encoder FP32 → INT8")
     parser.add_argument(
         "--model_dir",
-        default="../TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai",
+        default=str(get_model_dir()),
         help="Model directory",
     )
     parser.add_argument("--n_runs", type=int, default=500, help="Benchmark runs")

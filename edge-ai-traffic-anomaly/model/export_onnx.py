@@ -131,10 +131,12 @@ def _validate_onnx(onnx_path: Path, torch_model: torch.nn.Module, input_dim: int
 
 
 if __name__ == "__main__":
+    from configs.paths import get_model_dir
+
     parser = argparse.ArgumentParser(description="Export ET-SSL encoder to ONNX")
     parser.add_argument(
         "--model_dir",
-        default="../TrafficGuard/models/edge_ai-20260716T101644Z-1-001/edge_ai",
+        default=str(get_model_dir()),
         help="Directory containing encoder_fp32.pt and config.json",
     )
     parser.add_argument(
