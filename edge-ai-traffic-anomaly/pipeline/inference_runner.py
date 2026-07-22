@@ -15,6 +15,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+import queue
+import threading
 import numpy as np
 
 from configs.paths import load_config
@@ -66,6 +68,22 @@ class PipelineInferenceRunner:
         # Biến trạng thái chẩn đoán (Diagnostic states)
         self.flow_history: Dict[str, Dict[str, Any]] = {}
         self.recent_high_scores: List[Tuple[str, float, np.ndarray]] = []
+
+        # Hàng đợi (Queue) cho Inference bất đồng bộ
+        self.inference_queue = queue.Queue(maxsize=10000)
+        self.batch_size = 32
+        self.batch_timeout = 0.05  # 50ms
+        self.stop_event = threading.Event()
+        self.inference_thread = threading.Thread(target=self._batch_worker, daemon=True)
+        self.monitor_thread = threading.Thread(target=self._throughput_monitor, daemon=True)
+        self.inference_thread.start()
+        self.monitor_thread.start()
+
+    def stop(self):
+        """Dừng các luồng nền."""
+        self.stop_event.set()
+        self.inference_thread.join(timeout=2.0)
+        self.monitor_thread.join(timeout=2.0)
 
     @classmethod
     def from_config(
@@ -121,55 +139,94 @@ class PipelineInferenceRunner:
         """Tính toán ngưỡng phát hiện thực tế: δ × κ."""
         return float(self.engine.delta * self.kappa)
 
-    def process_flow(self, flow: FlowRecord, feature_vector: np.ndarray) -> Dict[str, Any]:
-        """
-        Xử lý quy trình toàn diện cho một luồng đơn lẻ.
+    def process_flow(self, flow: FlowRecord, feature_vector: np.ndarray):
+        """Được gọi bởi Capture layer (hoặc Preprocess worker) để đưa dữ liệu vào hàng đợi (decoupling)."""
+        try:
+            self.inference_queue.put_nowait((flow, feature_vector))
+        except queue.Full:
+            logger.warning("WARNING: Hàng đợi inference_queue đã đầy (maxsize=%d)! Đang rớt gói.", self.inference_queue.maxsize)
 
-        Args:
-            flow: Bản ghi đối tượng của luồng.
-            feature_vector: Vector trích xuất đặc trưng gồm 20 chiều.
+    def _batch_worker(self):
+        """Worker thread: gom các luồng thành 1 batch (theo size hoặc timeout) rồi gọi predict_batch."""
+        batch_flows = []
+        batch_features = []
+        last_process_time = time.time()
 
-        Returns:
-            Từ điển mô tả kết quả chuẩn đoán.
-        """
-        result = self._run_inference(feature_vector)
-        score = result["score"]
-        is_anomaly = result["is_anomaly"]
+        while not self.stop_event.is_set() or not self.inference_queue.empty():
+            try:
+                # Đợi dữ liệu với timeout nhỏ để kiểm tra xem có cần xử lý batch hiện tại không
+                flow, feat = self.inference_queue.get(timeout=0.01)
+                batch_flows.append(flow)
+                batch_features.append(feat)
+                self.inference_queue.task_done()
+            except queue.Empty:
+                pass
+
+            now = time.time()
+            if len(batch_flows) >= self.batch_size or (len(batch_flows) > 0 and (now - last_process_time) >= self.batch_timeout) or self.stop_event.is_set():
+                if len(batch_flows) > 0:
+                    self._process_batch(batch_flows, batch_features)
+                    batch_flows.clear()
+                    batch_features.clear()
+                    last_process_time = time.time()
+
+    def _process_batch(self, flows: List[FlowRecord], features: List[np.ndarray]):
+        """Xử lý thực sự cho một lô dữ liệu."""
+        X = np.vstack(features)
         
-        flow_id = f"{flow.src_ip}:{flow.src_port}->{flow.dst_ip}:{flow.dst_port}"
-        src = f"{flow.src_ip}:{flow.src_port}"
-        dst = f"{flow.dst_ip}:{flow.dst_port}"
-
-        if logger.isEnabledFor(logging.DEBUG):
-            self._run_diagnostics(flow, feature_vector, flow_id, score)
-
-        # Cập nhật tiến độ trực quan
-        self.state.record_flow(
-            score=score,
-            is_anomaly=is_anomaly,
-            src=src,
-            dst=dst,
-            latency_ms=result["latency_ms"],
-        )
-
-        if is_anomaly:
-            self._handle_anomaly(flow, flow_id, src, dst, score)
-        else:
-            self._handle_normal(result["embedding"], score)
-
-        self._flows_processed += 1
-        status = "ANOMALY" if is_anomaly else "NORMAL"
-        logger.info("[%s] %s | score=%.2f δ=%.2f", status, flow_id, score, self.effective_delta)
+        # Gọi engine suy luận lô
+        results = self.engine.predict_batch(X)
         
-        return result
+        for i, res in enumerate(results):
+            flow = flows[i]
+            feat = features[i]
+            score = res["score"]
+            is_anomaly = res["is_anomaly"]
+            
+            flow_id = f"{flow.src_ip}:{flow.src_port}->{flow.dst_ip}:{flow.dst_port}"
+            src = f"{flow.src_ip}:{flow.src_port}"
+            dst = f"{flow.dst_ip}:{flow.dst_port}"
 
-    def _run_inference(self, feature_vector: np.ndarray) -> Dict[str, Any]:
-        """Tính toán vector nhúng (embedding) và mức độ bất thường."""
-        result = self.engine.predict(feature_vector)
-        score = float(result["score"])
-        result["is_anomaly"] = score > self.effective_delta
-        result["effective_delta"] = self.effective_delta
-        return result
+            if logger.isEnabledFor(logging.DEBUG):
+                self._run_diagnostics(flow, feat, flow_id, score)
+
+            # Cập nhật trạng thái
+            self.state.record_flow(
+                score=score,
+                is_anomaly=is_anomaly,
+                src=src,
+                dst=dst,
+                latency_ms=res["latency_ms"],
+            )
+
+            if is_anomaly:
+                self._handle_anomaly(flow, flow_id, src, dst, score)
+            else:
+                self._handle_normal(res["embedding"], score)
+
+            self._flows_processed += 1
+            if is_anomaly:
+                logger.info("[ANOMALY] %s | score=%.2f δ=%.2f", flow_id, score, self.effective_delta)
+            else:
+                logger.debug("[NORMAL] %s | score=%.2f δ=%.2f", flow_id, score, self.effective_delta)
+
+    def _throughput_monitor(self):
+        """Worker thread: Theo dõi và in ra throughput mỗi 5 giây."""
+        last_time = time.time()
+        last_count = 0
+        while not self.stop_event.is_set():
+            time.sleep(5.0)
+            now = time.time()
+            current_count = self._flows_processed
+            delta_count = current_count - last_count
+            delta_time = now - last_time
+            if delta_count > 0:
+                tps = delta_count / delta_time
+                logger.info("[MONITOR] Real-time Throughput: %.2f flows/sec (Total: %d)", tps, current_count)
+            last_time = now
+            last_count = current_count
+
+
 
     def _handle_anomaly(
         self, flow: FlowRecord, flow_id: str, src: str, dst: str, score: float
