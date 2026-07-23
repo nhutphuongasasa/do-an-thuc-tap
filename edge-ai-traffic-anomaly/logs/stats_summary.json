@@ -1,0 +1,11 @@
+{
+  "ts": "2026-07-23T15:35:06",
+  "packets_per_sec_avg": 13.93,
+  "flows_per_sec_avg": 0.23,
+  "anomaly_count": 83,
+  "anomaly_rate": 0.0939,
+  "avg_batch_size": 4.63,
+  "avg_latency_ms": 0.324,
+  "queue_drops": 0,
+  "flow_active": 90
+}
